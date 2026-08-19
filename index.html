@@ -3,7 +3,22 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="theme-color" content="#0B1220" />
+<meta name="theme-color" content="#0B1220" id="themeColorMeta" />
+<script>
+  // 🌓 描画前にテーマを確定させ、ダークモード時に一瞬でも違うテーマの背景が
+  // 表示されてしまう「ちらつき」を防止する（CSSが解釈される前に同期実行）
+  (function () {
+    try {
+      var saved = localStorage.getItem('sky_app_theme');
+      var isDark = saved ? (saved === 'dark') : window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+      var meta = document.getElementById('themeColorMeta');
+      if (meta) meta.setAttribute('content', isDark ? '#0B1220' : '#EEF5FC');
+    } catch (e) {
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  })();
+</script>
 <title>Profile</title>
 <meta name="description" content="自己紹介ページ" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='42' fill='%2338BDF8'/%3E%3C/svg%3E" />
@@ -19,21 +34,26 @@
 
 <style>
   :root {
-    --bg: #0B1220;          /* 背景の紺 */
-    --bg-glow: rgba(56, 189, 248, 0.16);
-    --grid-line: rgba(56, 189, 248, 0.07);
-    --panel: #131E30;       /* カード本体 */
-    --panel-alt: #0C1729;   /* タブバー・ホバー面 */
-    --row: #101D32;         /* リンク行の面 */
-    --border: rgba(148, 163, 184, 0.22);
-    --border-strong: rgba(56, 189, 248, 0.5);
-    --text: #EDF2F9;        /* 本文の文字色 */
-    --text-muted: #A9B8CC;  /* 補足・コメント色 */
-    --sky: #38BDF8;         /* メインの水色 */
-    --sky-bright: #7DD3FC;  /* 明るい水色（ホバー用） */
-    --sky-deep: #0EA5E9;    /* 濃い水色 */
-    --teal: #2DD4BF;        /* 差し色（青緑） */
-    --indigo: #818CF8;      /* 差し色（青紫） */
+    /* ☀️ ライトモード（既定値）。もともとこのサイトは紺色の固定配色だったため、
+       この:rootを新しく明るい配色として設計し、従来の紺色配色は
+       そのまま下の[data-theme="dark"]側（ダークモード）に移設した。
+       アクセント色（--sky/--sky-bright/--teal/--indigo）は色相はそのまま、
+       白背景でのAAコントラスト確保のため明るさだけ落としている。 */
+    --bg: #EEF5FC;           /* 背景の淡い水色 */
+    --bg-glow: rgba(56, 189, 248, 0.12);
+    --grid-line: rgba(2, 132, 199, 0.06);
+    --panel: #FFFFFF;        /* カード本体 */
+    --panel-alt: #E4EFFA;    /* タブバー・ホバー面 */
+    --row: #F1F7FD;          /* リンク行の面 */
+    --border: rgba(15, 23, 42, 0.12);
+    --border-strong: rgba(2, 132, 199, 0.45);
+    --text: #0F172A;         /* 本文の文字色 */
+    --text-muted: #51607A;   /* 補足・コメント色 */
+    --sky: #0284C7;          /* メインの水色（テキストでも読めるよう暗め） */
+    --sky-bright: #0369A1;   /* 強調用の水色（ホバー用） */
+    --sky-deep: #0EA5E9;     /* 濃い水色（バッジ等の塗り。両テーマ共通） */
+    --teal: #0F766E;         /* 差し色(青緑。テキストでも読めるよう暗め) */
+    --indigo: #818CF8;       /* 差し色（青紫） */
     --radius: 16px;
 
     /* 画面サイズに応じて広がる余白 */
@@ -44,6 +64,49 @@
     --card-pad-x: clamp(20px, 5vw, 48px);
     --card-pad-b: clamp(26px, 4.5vw, 48px);
   }
+
+  /* 🌙 ダークモード用のカラー上書き。以前このサイトが常時使っていた紺色配色を
+     そのままダークモードの値として保持している（見た目は変更前と同一）。 */
+  [data-theme="dark"] {
+    --bg: #0B1220;
+    --bg-glow: rgba(56, 189, 248, 0.16);
+    --grid-line: rgba(56, 189, 248, 0.07);
+    --panel: #131E30;
+    --panel-alt: #0C1729;
+    --row: #101D32;
+    --border: rgba(148, 163, 184, 0.22);
+    --border-strong: rgba(56, 189, 248, 0.5);
+    --text: #EDF2F9;
+    --text-muted: #A9B8CC;
+    --sky: #38BDF8;
+    --sky-bright: #7DD3FC;
+    --teal: #2DD4BF;
+  }
+
+  /* 🌙 ダークモード用：CSS変数化されていない直書きの色（背景の縦グラデ・カードの影・
+     Sky Statusパネルの背景・警告色・フッター文字色）も、以前の見た目のまま保持する。
+     ライトモード側の値は各セレクタの元の宣言（下）で新規に定義している。 */
+  [data-theme="dark"] body {
+    background-image:
+      radial-gradient(ellipse 60% 40% at 18% 10%, rgba(56,189,248,0.16), transparent 60%),
+      radial-gradient(ellipse 55% 35% at 85% 8%, rgba(125,211,252,0.13), transparent 60%),
+      radial-gradient(ellipse 60% 45% at 78% 92%, rgba(45,212,191,0.12), transparent 60%),
+      radial-gradient(ellipse 55% 40% at 12% 88%, rgba(56,189,248,0.1), transparent 60%),
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(180deg, #0B1220 0%, #0E1B30 50%, #0B1220 100%);
+  }
+  [data-theme="dark"] .card {
+    box-shadow:
+      0 1px 2px rgba(0,0,0,0.4),
+      0 20px 40px -18px rgba(56,189,248,0.28),
+      0 40px 80px -32px rgba(0,0,0,0.6);
+  }
+  [data-theme="dark"] .sky-panel {
+    background: linear-gradient(160deg, rgba(56,189,248,0.12), rgba(19,30,48,0.92));
+  }
+  [data-theme="dark"] .sky-reset-val.soon { color: #FBBF24; }
+  [data-theme="dark"] .footnote { color: rgba(148, 163, 184, 0.55); }
 
   * { box-sizing: border-box; }
 
@@ -61,7 +124,7 @@
       radial-gradient(ellipse 55% 40% at 12% 88%, rgba(56,189,248,0.1), transparent 60%),
       linear-gradient(var(--grid-line) 1px, transparent 1px),
       linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
-      linear-gradient(180deg, #0B1220 0%, #0E1B30 50%, #0B1220 100%);
+      linear-gradient(180deg, #EEF5FC 0%, #F7FBFF 50%, #EEF5FC 100%);
     background-size: auto, auto, auto, auto, 34px 34px, 34px 34px, 100% 100%;
     background-attachment: fixed;
     display: flex;
@@ -106,9 +169,9 @@
     border: 1px solid var(--border);
     padding: var(--card-pad-y) var(--card-pad-x) var(--card-pad-b);
     box-shadow:
-      0 1px 2px rgba(0,0,0,0.4),
-      0 20px 40px -18px rgba(56,189,248,0.28),
-      0 40px 80px -32px rgba(0,0,0,0.6);
+      0 1px 2px rgba(15,23,42,0.08),
+      0 20px 40px -18px rgba(2,132,199,0.18),
+      0 40px 80px -32px rgba(15,23,42,0.12);
     animation: card-settle 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
@@ -557,7 +620,7 @@
     width: 100%;
     box-sizing: border-box;
     text-align: left;
-    background: linear-gradient(160deg, rgba(56,189,248,0.12), rgba(19,30,48,0.92));
+    background: linear-gradient(160deg, rgba(2,132,199,0.10), rgba(255,255,255,0.92));
     border: 1px solid var(--border-strong);
     border-radius: 14px;
     padding: 10px 12px;
@@ -595,7 +658,7 @@
     font-size: 11px; color: var(--text); font-weight: 700; line-height: 1.25;
     font-variant-numeric: tabular-nums; white-space: nowrap;
   }
-  .sky-reset-val.soon { color: #FBBF24; }
+  .sky-reset-val.soon { color: #B45309; }
 
   .sky-active-item {
     display: flex; align-items: flex-start; gap: 6px;
@@ -627,7 +690,7 @@
   /* ---------- フッター ---------- */
   .footnote {
     text-align: center;
-    color: rgba(148, 163, 184, 0.55);
+    color: rgba(15, 23, 42, 0.45);
     font-size: 12px;
     letter-spacing: 0.02em;
     margin: 28px 0 0;
@@ -652,6 +715,134 @@
     .avatar-wrap { width: 96px; height: 96px; }
     .avatar { font-size: 34px; }
   }
+
+  /* ---------- ⚙️ 表示設定モーダル ---------- */
+  .settings-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(0,0,0,0.5);
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .settings-modal-overlay.open { display: flex; }
+  .settings-modal-card {
+    width: 100%;
+    max-width: 360px;
+    max-height: 80vh;
+    overflow-y: auto;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.45);
+  }
+  .settings-modal-card h3 {
+    margin: 0 0 14px;
+    font-size: 16px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .settings-close-x {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px;
+    font-family: inherit;
+  }
+  .settings-close-x:hover { color: var(--text); }
+  .settings-section { margin-top: 16px; }
+  .settings-section:first-of-type { margin-top: 0; }
+  .settings-section-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin: 0 0 8px;
+    letter-spacing: 0.04em;
+  }
+  .settings-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--row);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 8px;
+  }
+  .settings-row:last-child { margin-bottom: 0; }
+  .settings-row-text {
+    flex: 1;
+    min-width: 0;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .settings-toggle-btn {
+    background: var(--panel-alt);
+    border: 1px solid var(--border-strong);
+    color: var(--sky-bright);
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 12px;
+    border-radius: 999px;
+    padding: 6px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+  }
+  .settings-toggle-btn:hover { border-color: var(--sky); background: var(--row); }
+  .settings-checkbox {
+    width: 19px;
+    height: 19px;
+    flex-shrink: 0;
+    cursor: pointer;
+    accent-color: var(--sky);
+  }
+  .settings-key-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 4px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+  }
+  .settings-key {
+    flex-shrink: 0;
+    min-width: 32px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 11px;
+    color: var(--sky-bright);
+    background: var(--panel-alt);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 6px;
+  }
+  .settings-close-btn {
+    display: block;
+    width: 100%;
+    margin-top: 18px;
+    background: var(--panel-alt);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 11px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+  }
+  .settings-close-btn:hover { border-color: var(--border-strong); }
 </style>
 </head>
 <body>
@@ -675,6 +866,7 @@
         <span class="term-dot"></span>
       </span>
       <p class="card-label" id="card-label"></p>
+      <button type="button" class="lang-toggle" id="settingsToggle" onclick="settingsOpen()" title="表示設定" data-i18n-title="settingsButtonTitle" aria-label="Display settings / 表示設定">⚙️</button>
       <button type="button" class="lang-toggle" id="langToggle" onclick="toggleLang()" aria-label="Switch language / 言語を切り替える">EN</button>
     </div>
 
@@ -754,6 +946,39 @@
   <p class="footnote" style="margin-top:6px; opacity:0.75;" data-i18n="unofficialDisclaimer">このサイトはSky 星を紡ぐ子どもたちの非公式ファンサイトです。thatgamecompanyは一切関与していません。</p>
   <p class="footnote" id="footnote"></p>
   <p class="footnote" style="margin-top:6px;"><a href="https://taipak5000.github.io/tai-info/" style="color:inherit; text-decoration:underline; text-underline-offset:2px;" data-i18n="settingsLink">⚙️ 設定・更新情報・クレジット・プライバシーポリシー</a></p>
+</div>
+
+<!-- ⚙️ 表示設定モーダル（ダークモード・キーボードショートカット） -->
+<div class="settings-modal-overlay" id="settingsModalOverlay" onclick="if(event.target===this) settingsClose()">
+  <div class="settings-modal-card">
+    <h3>
+      <span>⚙️ <span data-i18n="settingsTitle">表示設定</span></span>
+      <button type="button" class="settings-close-x" onclick="settingsClose()" aria-label="Close">✕</button>
+    </h3>
+
+    <div class="settings-section">
+      <p class="settings-section-label" data-i18n="settingsDisplaySection">🌙 表示</p>
+      <div class="settings-row">
+        <span aria-hidden="true">🌙</span>
+        <span class="settings-row-text" data-i18n="darkModeRowLabel">ダークモード</span>
+        <button type="button" class="settings-toggle-btn" id="settingsThemeBtn" onclick="toggleTheme()"></button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <p class="settings-section-label" data-i18n="settingsShortcutsSection">⌨️ キーボードショートカット</p>
+      <div class="settings-row">
+        <span aria-hidden="true">⌨️</span>
+        <span class="settings-row-text" data-i18n="shortcutsEnableLabel">ショートカットを有効にする</span>
+        <input type="checkbox" class="settings-checkbox" id="settingsShortcutsCheckbox" onchange="settingsSaveShortcutsPref(this.checked)">
+      </div>
+      <div class="settings-key-row"><span class="settings-key">?</span><span data-i18n="shortcutOpenSettings">この設定を開く</span></div>
+      <div class="settings-key-row"><span class="settings-key">D</span><span data-i18n="shortcutToggleDark">ダークモード切替</span></div>
+      <div class="settings-key-row"><span class="settings-key">Esc</span><span data-i18n="shortcutCloseWindow">開いているウィンドウを閉じる</span></div>
+    </div>
+
+    <button type="button" class="settings-close-btn" onclick="settingsClose()" data-i18n="closeButton">閉じる</button>
+  </div>
 </div>
 
 <script>
@@ -991,7 +1216,21 @@
     redShard: { ja: '赤い破片', en: 'Red Shard' },
     blackShard: { ja: '黒い破片', en: 'Black Shard' },
     shardActiveTooltip: { ja: '{color}が来ています（{realm}・{place}）／終了まで{remain}', en: '{color} is here ({realm} · {place}) / Ends in {remain}' },
-    shardUpcomingTooltip: { ja: '{color}が来ます（{place}）／開始まで{remain}', en: '{color} is coming ({place}) / Starts in {remain}' }
+    shardUpcomingTooltip: { ja: '{color}が来ます（{place}）／開始まで{remain}', en: '{color} is coming ({place}) / Starts in {remain}' },
+
+    // ⚙️ 表示設定モーダル
+    settingsButtonTitle: { ja: '表示設定', en: 'Display Settings' },
+    settingsTitle: { ja: '表示設定', en: 'Display Settings' },
+    settingsDisplaySection: { ja: '🌙 表示', en: '🌙 Display' },
+    darkModeRowLabel: { ja: 'ダークモード', en: 'Dark Mode' },
+    darkModeOnLabel: { ja: '🌙 ダーク', en: '🌙 Dark' },
+    darkModeOffLabel: { ja: '☀️ ライト', en: '☀️ Light' },
+    settingsShortcutsSection: { ja: '⌨️ キーボードショートカット', en: '⌨️ Keyboard Shortcuts' },
+    shortcutsEnableLabel: { ja: 'ショートカットを有効にする', en: 'Enable keyboard shortcuts' },
+    shortcutOpenSettings: { ja: 'この設定を開く', en: 'Open this settings panel' },
+    shortcutToggleDark: { ja: 'ダークモード切替', en: 'Toggle dark mode' },
+    shortcutCloseWindow: { ja: '開いているウィンドウを閉じる', en: 'Close the open window' },
+    closeButton: { ja: '閉じる', en: 'Close' }
   };
 
   // key に対応する訳文を返す。{name} 形式のプレースホルダーは vars で置換する
@@ -1044,7 +1283,91 @@
     updateSkyClocks();
     renderSkyActive();
     renderShardBadge();
+    syncSettingsUI();
   }
+
+  /* ================================================================
+     ⚙️ 表示設定（ダークモード・キーボードショートカット）
+     taipak5000.github.io 配下の全ツール共通のキーで保存する
+     （sky_app_theme・sky_shortcuts_enabled）。テーマの初期反映
+     （読み込み時のちらつき防止）は<head>先頭の同期scriptで行うため、
+     ここではトグル操作と設定モーダルの中身だけを扱う。
+     ================================================================ */
+  const SKY_THEME_KEY = 'sky_app_theme';
+  const SKY_SHORTCUTS_KEY = 'sky_shortcuts_enabled';
+
+  function isDarkModeOn() {
+    return document.documentElement.getAttribute('data-theme') === 'dark';
+  }
+  function applyThemeToDOM(isDark) {
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    const meta = document.getElementById('themeColorMeta');
+    if (meta) meta.setAttribute('content', isDark ? '#0B1220' : '#EEF5FC');
+  }
+  function toggleTheme() {
+    const next = !isDarkModeOn();
+    applyThemeToDOM(next);
+    try { localStorage.setItem(SKY_THEME_KEY, next ? 'dark' : 'light'); } catch (e) { /* プライベートブラウジング等 */ }
+    syncSettingsUI();
+  }
+
+  // 未設定（null）の場合は有効（true）扱い。他タブ/他サイトでの変更もすぐ反映されるよう、
+  // キャッシュせずその都度localStorageから読み直す。
+  function skyShortcutsEnabled() {
+    try {
+      const v = localStorage.getItem(SKY_SHORTCUTS_KEY);
+      return v === null ? true : v === '1';
+    } catch (e) { return true; }
+  }
+  function settingsSaveShortcutsPref(checked) {
+    try { localStorage.setItem(SKY_SHORTCUTS_KEY, checked ? '1' : '0'); } catch (e) { /* プライベートブラウジング等 */ }
+  }
+
+  // 設定モーダル内のテーマ切替ボタン・ショートカットのチェックボックスの表示を、
+  // 現在の状態（言語切替・他タブでの変更を含む）に同期させる。
+  function syncSettingsUI() {
+    const btn = document.getElementById('settingsThemeBtn');
+    if (btn) btn.textContent = isDarkModeOn() ? t('darkModeOnLabel') : t('darkModeOffLabel');
+    const cb = document.getElementById('settingsShortcutsCheckbox');
+    if (cb) cb.checked = skyShortcutsEnabled();
+  }
+  function settingsOpen() {
+    syncSettingsUI();
+    document.getElementById('settingsModalOverlay').classList.add('open');
+  }
+  function settingsClose() {
+    document.getElementById('settingsModalOverlay').classList.remove('open');
+  }
+
+  // ⌨️ Escキーで、開いていれば表示設定モーダルを閉じる（このリポジトリには
+  // モーダルがこれ1つしかないため、単純にこのモーダルの開閉状態だけを見ればよい）。
+  function closeTopmostOpenModal() {
+    const overlay = document.getElementById('settingsModalOverlay');
+    if (overlay && overlay.classList.contains('open')) settingsClose();
+  }
+
+  // ⌨️ 全ページ共通のキーボードショートカット（?＝表示設定を開く／d,D＝ダークモード切替／
+  // Esc＝開いているモーダルを閉じる）。Escはテキスト入力中でも常に有効（ダイアログを閉じる
+  // のはユーザーの期待に沿う、既存のクリックアウトサイドで閉じる挙動と同種の基本UXのため）
+  // かつ sky_shortcuts_enabled の対象外。?とdは、テキスト入力中は通常の文字入力として使える
+  // ようにガードする。
+  document.addEventListener('keydown', function (e) {
+    if (e.repeat) return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const targetEl = e.target;
+    const isTyping = targetEl && (targetEl.tagName === 'INPUT' || targetEl.tagName === 'TEXTAREA' || targetEl.tagName === 'SELECT' || targetEl.isContentEditable);
+
+    if (e.key === 'Escape') {
+      closeTopmostOpenModal();
+      return;
+    }
+
+    if (isTyping) return;
+    if (!skyShortcutsEnabled()) return;
+
+    if (e.key === '?') { e.preventDefault(); settingsOpen(); return; }
+    if (e.key === 'd' || e.key === 'D') { e.preventDefault(); toggleTheme(); return; }
+  });
 
   function renderProfile() {
     const initial = (profile.name || "?").trim().charAt(0);
