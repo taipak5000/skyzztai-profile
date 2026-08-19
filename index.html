@@ -142,6 +142,8 @@
   .term-dot:nth-child(3) { background: #27C93F; }
 
   .card-label {
+    flex: 1;
+    min-width: 0;
     margin: 0;
     font-size: 13px;
     letter-spacing: 0.06em;
@@ -150,6 +152,35 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  /* ---------- 言語切り替えボタン ---------- */
+  .lang-toggle {
+    flex-shrink: 0;
+    margin-left: auto;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--sky-bright);
+    background: var(--panel);
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    padding: 4px 11px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+  }
+
+  .lang-toggle:hover,
+  .lang-toggle:focus-visible {
+    border-color: var(--sky);
+    background: var(--row);
+    color: var(--text);
+  }
+
+  .lang-toggle:focus-visible {
+    outline: 2px solid var(--sky);
+    outline-offset: 2px;
   }
 
   /* ---------- プロフィール ---------- */
@@ -644,6 +675,7 @@
         <span class="term-dot"></span>
       </span>
       <p class="card-label" id="card-label"></p>
+      <button type="button" class="lang-toggle" id="langToggle" onclick="toggleLang()" aria-label="Switch language / 言語を切り替える">EN</button>
     </div>
 
     <div class="profile">
@@ -657,7 +689,7 @@
             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.classList.toggle('tap-open');}">
             <span class="sky-reset-icon">🌅</span>
             <div class="sky-reset-text">
-              <div class="sky-reset-label-mini">デイリー残り</div>
+              <div class="sky-reset-label-mini" data-i18n="dailyRemainLabel">デイリー残り</div>
               <div class="sky-reset-val" id="skyDailyCountdown">--:--:--</div>
             </div>
           </div>
@@ -666,13 +698,13 @@
             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.classList.toggle('tap-open');}">
             <span class="sky-reset-icon">🌋</span>
             <div class="sky-reset-text">
-              <div class="sky-reset-label-mini">原罪リセットまで</div>
+              <div class="sky-reset-label-mini" data-i18n="edenResetLabel">原罪リセットまで</div>
               <div class="sky-reset-val" id="skyEdenCountdown">--</div>
             </div>
           </div>
         </div>
 
-        <div class="avatar-wrap" id="avatar-wrap" title="タップしてみてね">
+        <div class="avatar-wrap" id="avatar-wrap" title="タップしてみてね" data-i18n-title="tapMe">
           <div class="avatar" id="avatar"></div>
           <div class="shard-badge" id="shardBadge" role="button" tabindex="0"
             onclick="event.stopPropagation();this.classList.toggle('tap-open')"
@@ -706,7 +738,7 @@
       <p class="bio" id="profile-bio"></p>
 
       <details class="more-info" id="more-info">
-        <summary class="more-info-summary">興味を持ってくれた方へ</summary>
+        <summary class="more-info-summary" data-i18n="moreInfoSummary">興味を持ってくれた方へ</summary>
         <p class="more-info-content" id="more-info-content"></p>
       </details>
     </div>
@@ -719,9 +751,9 @@
     </section>
   </main>
 
-  <p class="footnote" style="margin-top:6px; opacity:0.75;">このサイトはSky 星を紡ぐ子どもたちの非公式ファンサイトです。thatgamecompanyは一切関与していません。</p>
+  <p class="footnote" style="margin-top:6px; opacity:0.75;" data-i18n="unofficialDisclaimer">このサイトはSky 星を紡ぐ子どもたちの非公式ファンサイトです。thatgamecompanyは一切関与していません。</p>
   <p class="footnote" id="footnote"></p>
-  <p class="footnote" style="margin-top:6px;"><a href="https://taipak5000.github.io/tai-info/" style="color:inherit; text-decoration:underline; text-underline-offset:2px;">⚙️ 設定・更新情報・クレジット・プライバシーポリシー</a></p>
+  <p class="footnote" style="margin-top:6px;"><a href="https://taipak5000.github.io/tai-info/" style="color:inherit; text-decoration:underline; text-underline-offset:2px;" data-i18n="settingsLink">⚙️ 設定・更新情報・クレジット・プライバシーポリシー</a></p>
 </div>
 
 <script>
@@ -731,20 +763,28 @@
   const profile = {
     name: "たい",
     tagline: "ものづくりが好きです",
+    // ▼ 英語表示用（空欄ならtaglineが代わりに表示されます）
+    taglineEn: "I love making things.",
 
     // MBTIタイプ（空欄なら非表示になります）
     mbti: "ISTJ",
 
     // 年齢ステータス（空欄なら非表示になります）
     ageStatus: "成人済み",
+    // ▼ 英語表示用（空欄ならageStatusが代わりに表示されます）
+    ageStatusEn: "Adult",
 
     // ゲーム内の名前（空欄なら非表示になります）
     gameName: "Paㅋ",
 
     bio: "普段は自分が欲しいと思ったサイトを作って公開しています。\n効率化やちょっとしたグリッチ技を扱うのが好きです。\n含み笑いのスカウトマスクを愛用している方とフレンドになりたいです。",
+    // ▼ 英語表示用（空欄ならbioが代わりに表示されます）
+    bioEn: "I usually build and publish whatever websites I feel like I need myself.\nI enjoy efficiency tricks and the occasional small glitch technique.\nI'd love to be friends with anyone who wears the smirking Scout mask.",
 
     // 「もっと知りたい人向け」を押すと表示される追加情報（空欄なら非表示になります）
     extraInfo: "Sky以外に、モンストやイナクロもプレイしている方仲良くしてくれると嬉しいです\n切り絵の作成やイラストを描いたりと、いろんなことに手を出しています！",
+    // ▼ 英語表示用（空欄ならextraInfoが代わりに表示されます）
+    extraInfoEn: "Besides Sky, I'd be happy to get along with anyone who also plays Monster Strike or Inazuma Eleven Climax.\nI also dabble in a bunch of other things, like paper cutting art and illustration!",
 
     // 写真を使いたい場合はここにファイル名やURLを入れてください
     // 例: "avatar.jpg"（このHTMLと同じ場所に画像を置いてください）
@@ -771,56 +811,74 @@
     {
       icon: "🐦",
       title: "X (Twitter)",
+      titleEn: "X (Twitter)",
       url: "https://x.com/skyzztai",
-      description: "日々のぼやきやスクショ、メモなど\nゆるい呟きを投稿しています！\n早く返信してほしい・確実に読んでほしい内容は、リプライ・引用・DMでお送りください！"
+      description: "日々のぼやきやスクショ、メモなど\nゆるい呟きを投稿しています！\n早く返信してほしい・確実に読んでほしい内容は、リプライ・引用・DMでお送りください！",
+      descriptionEn: "I post casual day-to-day musings, screenshots, and notes.\nIf you want a fast reply, or want to make sure I actually see something, please send it as a reply, quote tweet, or DM!"
     },
     {
       icon: "📦",
       title: "お題箱",
+      titleEn: "Odaibako (Question Box)",
       url: "https://odaibako.net/u/Skyzztai",
-      description: "感想やご意見はこちらへどうぞ。\nDMやリプで送りにくい内容も気軽にお送りください！"
+      description: "感想やご意見はこちらへどうぞ。\nDMやリプで送りにくい内容も気軽にお送りください！",
+      descriptionEn: "Feel free to send feedback or thoughts here.\nIt's also a good place for anything that feels awkward to send as a DM or reply!"
     },
     {
       icon: "🗂️",
       title: "アイテム所持管理",
+      titleEn: "Item Ownership Tracker",
       url: "https://taipak5000.github.io/tai-item/",
-      description: "所持しているアイテムの管理や、\n未所持アイテムの入手コストを確認できます。\nウィッシュリストも作れるので、集めたい方におすすめ！"
+      description: "所持しているアイテムの管理や、\n未所持アイテムの入手コストを確認できます。\nウィッシュリストも作れるので、集めたい方におすすめ！",
+      descriptionEn: "Track which items you own and check the acquisition cost of items you don't.\nYou can also build a wishlist, so it's great if you're going for a collection!"
     },
     {
       icon: "🎭",
       title: "エモート所持率管理",
+      titleEn: "Emote Collection Tracker",
       url: "https://taipak5000.github.io/tai-emote/",
-      description: "所持しているエモートの管理や、\nレベルごとの取得状況を確認できます。\nコンプリート状況を把握したい方におすすめ！"
+      description: "所持しているエモートの管理や、\nレベルごとの取得状況を確認できます。\nコンプリート状況を把握したい方におすすめ！",
+      descriptionEn: "Track which emotes you own and see your progress by level.\nGreat if you want to keep tabs on your completion rate!"
     },
     {
       icon: "📌",
       title: "創作物管理ツール",
+      titleEn: "Creation Deadline Manager",
       url: "https://taipak5000.github.io/share/",
-      description: "シェアメモやスペース、メセボなどの\n期限を管理できるツールです。\n投稿の期限切れを見逃したくない方におすすめ！"
+      description: "シェアメモやスペース、メセボなどの\n期限を管理できるツールです。\n投稿の期限切れを見逃したくない方におすすめ！",
+      descriptionEn: "A tool for tracking the expiry dates of Share Memos, Spaces, Message Boards, and the like.\nGreat if you don't want to accidentally miss a post's expiration!"
     },
     {
       icon: "🕯️",
       title: "ノマキャン計算機",
+      titleEn: "Normal Candle Calculator",
       url: "https://taipak5000.github.io/tai-nomacan/",
-      description: "目標本数と1日の集めペースを入力するだけで、\n達成予定日や必要なキャンドル本数がわかります。\nノーマルキャンドルを計画的に集めたい方におすすめ！"
+      description: "目標本数と1日の集めペースを入力するだけで、\n達成予定日や必要なキャンドル本数がわかります。\nノーマルキャンドルを計画的に集めたい方におすすめ！",
+      descriptionEn: "Just enter your target amount and your daily collection pace to see your projected completion date and how many candles you still need.\nGreat for planning out your Normal Candle collecting!"
     },
     {
        icon: "🕯️",
        title: "星のキャンドル計算機",
+       titleEn: "Star Candle Calculator",
        url: "https://taipak5000.github.io/star-candle/",
-       description: "目標本数と所持本数を入力するだけで、\n達成時期の目安と赤闇の自動予測がわかります。\n目標達成日を知っておきたい方におすすめ！"
+       description: "目標本数と所持本数を入力するだけで、\n達成時期の目安と赤闇の自動予測がわかります。\n目標達成日を知っておきたい方におすすめ！",
+       descriptionEn: "Just enter your target amount and how many you currently own to get an estimated completion date and automatic shard predictions.\nGreat if you want to know roughly when you'll hit your goal!"
      },
     {
        icon: "✨",
        title: "精霊同行ツール",
+       titleEn: "Spirit Companion Tool",
        url: "https://taipak5000.github.io/companion/",
-       description: "精霊の連れ歩き状況を管理できるサイトです。\nアイテム交換やツリーの進行度がひと目で分かります。\n欲しいアイテムを効率よく集めたい方におすすめ！"
+       description: "精霊の連れ歩き状況を管理できるサイトです。\nアイテム交換やツリーの進行度がひと目で分かります。\n欲しいアイテムを効率よく集めたい方におすすめ！",
+       descriptionEn: "A site for tracking which spirits you're currently taking with you.\nSee item trades and friendship tree progress at a glance.\nGreat if you want to efficiently collect the items you want!"
      },
     {
        icon: "🪶",
        title: "羽トラッカー",
+       titleEn: "Wing Tracker",
        url: "https://taipak5000.github.io/wings/",
-       description: "初期の羽枚数や、\nまだ羽をもらえていない再訪を確認できます。\n羽の管理をしたい方におすすめ！"
+       description: "初期の羽枚数や、\nまだ羽をもらえていない再訪を確認できます。\n羽の管理をしたい方におすすめ！",
+       descriptionEn: "Check your starting wing count and which revisits you haven't claimed wings from yet.\nGreat if you want to keep your wing collection organized!"
      },
 
 
@@ -836,8 +894,10 @@
     {
       icon: "🔄",
       title: "データ引継ぎ",
+      titleEn: "Data Transfer",
       url: "https://taipak5000.github.io/tai-transfer/",
-      description: "引き継ぎコードを使って、複数の端末間で\n各サイトのデータを移行できます。\n機種変更やブラウザの引っ越しをしたい方におすすめ！"
+      description: "引き継ぎコードを使って、複数の端末間で\n各サイトのデータを移行できます。\n機種変更やブラウザの引っ越しをしたい方におすすめ！",
+      descriptionEn: "Use a transfer code to move your data between devices across each site.\nGreat if you're switching phones or moving to a different browser!"
     },
 
   ];
@@ -854,13 +914,15 @@
     seasons: [
       {
         name: '親愛なるファン・ゴッホへ',
+        nameEn: 'Dear Fangogh',
         start: '2026-07-17T16:00',
         end: '2026-10-02T15:59:59',
-        note: 'シーズンキャンドルの取り忘れに注意'
+        note: 'シーズンキャンドルの取り忘れに注意',
+        noteEn: "Don't forget to collect your Season Candles"
       }
     ],
     events: [
-      { name: '陽光の日々', start: '2026-07-31T16:00', end: '2026-08-21T15:59:59', note: '' },
+      { name: '陽光の日々', nameEn: 'Days of Sunlight', start: '2026-07-31T16:00', end: '2026-08-21T15:59:59', note: '', noteEn: '' },
     ],
     travelingSpirits: [
       // 例:
@@ -878,6 +940,7 @@
   // 周期がずれてきたら anchorStart / anchorEnd を最新の回に合わせて更新してください。
   const recurringVisit = {
     name: '再訪する精霊たち',
+    nameEn: 'The Returning Spirits',
     anchorStart: '2026-07-30T16:00',
     anchorEnd: '2026-08-03T15:59:59',
     intervalDays: 14
@@ -887,14 +950,110 @@
      通常は触らなくて大丈夫です ▲▲▲
      ================================================================ */
 
+  /* ================================================================
+     🌐 UI言語（日本語 / English）
+     'sky_app_lang'キー（'ja'|'en'）は端末側の表示設定のため、
+     このリポジトリのセーブ枠に依存しないグローバルなlocalStorageキーとして扱います。
+     ================================================================ */
+  function getStoredLang() {
+    try { return localStorage.getItem('sky_app_lang'); } catch (e) { return null; }
+  }
+  function setStoredLang(v) {
+    try { localStorage.setItem('sky_app_lang', v); } catch (e) { /* ignore */ }
+  }
+  let LANG = getStoredLang() || 'ja';
+
+  const TRANSLATIONS = {
+    dailyRemainLabel: { ja: 'デイリー残り', en: 'Daily Reset In' },
+    edenResetLabel: { ja: '原罪リセットまで', en: 'Eden Reset In' },
+    tapMe: { ja: 'タップしてみてね', en: 'Tap me!' },
+    moreInfoSummary: { ja: '興味を持ってくれた方へ', en: 'For those curious to know more' },
+    unofficialDisclaimer: { ja: 'このサイトはSky 星を紡ぐ子どもたちの非公式ファンサイトです。thatgamecompanyは一切関与していません。', en: 'This site is an unofficial fan site for Sky: Children of the Light. thatgamecompany is not involved in any way.' },
+    settingsLink: { ja: '⚙️ 設定・更新情報・クレジット・プライバシーポリシー', en: '⚙️ Settings, Updates, Credits & Privacy Policy' },
+    gameTime: { ja: 'ゲーム内時間 {time}', en: 'Game Time {time}' },
+    dailyResetTooltip: { ja: 'デイリーリセットまで（日本時間 毎日 {hour}:00 リセット）', en: 'Time until Daily Reset (resets daily at {hour}:00 JST)' },
+    edenResetTooltip: { ja: 'エデンリセットまで（日本時間 日曜 {hour}:00 リセット）', en: 'Time until Eden Reset (resets Sundays at {hour}:00 JST)' },
+    edenDaysHours: { ja: '{d}日{h}時', en: '{d}d {h}h' },
+    season: { ja: '季節', en: 'Season' },
+    dailyEvent: { ja: '日々', en: 'Days' },
+    revisit: { ja: '再訪', en: 'Revisit' },
+    noPlans: { ja: '予定なし', en: 'None scheduled' },
+    endsIn: { ja: '終了まで{remain}', en: 'Ends in {remain}' },
+    startsIn: { ja: '開始まで{remain}', en: 'Starts in {remain}' },
+    revisitEndsIn: { ja: '帰るまで{remain}', en: 'Leaves in {remain}' },
+    revisitStartsIn: { ja: '訪れるまで{remain}', en: 'Arrives in {remain}' },
+    remainDays: { ja: 'あと{n}日', en: '{n}d' },
+    remainHours: { ja: 'あと{n}時間', en: '{n}h' },
+    remainMinutes: { ja: 'あと{n}分', en: '{n}m' },
+    remainSeconds: { ja: 'あと{n}秒', en: '{n}s' },
+    shardNone: { ja: 'なし', en: 'None' },
+    shardNoneTodayTooltip: { ja: '本日（日本時間）はこの後、闇の破片の出現予定はありません', en: 'No more Shard Eruptions are expected today (Japan time).' },
+    redShard: { ja: '赤い破片', en: 'Red Shard' },
+    blackShard: { ja: '黒い破片', en: 'Black Shard' },
+    shardActiveTooltip: { ja: '{color}が来ています（{realm}・{place}）／終了まで{remain}', en: '{color} is here ({realm} · {place}) / Ends in {remain}' },
+    shardUpcomingTooltip: { ja: '{color}が来ます（{place}）／開始まで{remain}', en: '{color} is coming ({place}) / Starts in {remain}' }
+  };
+
+  // key に対応する訳文を返す。{name} 形式のプレースホルダーは vars で置換する
+  function t(key, vars) {
+    const entry = TRANSLATIONS[key];
+    let str = entry ? (entry[LANG] || entry.ja) : key;
+    if (vars) {
+      Object.keys(vars).forEach(function (k) {
+        str = str.replace(new RegExp('\\{' + k + '\\}', 'g'), vars[k]);
+      });
+    }
+    return str;
+  }
+
+  // プロフィール／リンク／スケジュールなど「編集エリア」のオブジェクトから、
+  // 現在の言語に対応するフィールドを取り出す（例: field='title' → LANGが'en'ならtitleEn、
+  // 無ければtitleにフォールバック）
+  function localizedField(obj, field) {
+    if (!obj) return '';
+    if (LANG === 'en') {
+      const v = obj[field + 'En'];
+      if (v) return v;
+    }
+    return obj[field] || '';
+  }
+
+  // data-i18n / data-i18n-title / data-i18n-placeholder が付いた要素に訳文を反映する
+  function applyI18n() {
+    document.documentElement.lang = LANG;
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+      el.textContent = t(el.getAttribute('data-i18n'));
+    });
+    document.querySelectorAll('[data-i18n-title]').forEach(function (el) {
+      el.title = t(el.getAttribute('data-i18n-title'));
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(function (el) {
+      el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+    });
+    const toggleBtn = document.getElementById('langToggle');
+    if (toggleBtn) toggleBtn.textContent = LANG === 'ja' ? 'EN' : '日本語';
+  }
+
+  // JA/ENボタン押下時：言語を切り替えて保存し、静的表示と動的描画の両方を更新し直す
+  function toggleLang() {
+    LANG = LANG === 'ja' ? 'en' : 'ja';
+    setStoredLang(LANG);
+    applyI18n();
+    renderProfile();
+    renderLinks();
+    updateSkyClocks();
+    renderSkyActive();
+    renderShardBadge();
+  }
+
   function renderProfile() {
     const initial = (profile.name || "?").trim().charAt(0);
 
     document.title = profile.name ? `${profile.name} | Profile` : "Profile";
     document.getElementById('card-label').textContent = profile.label || "";
     document.getElementById('profile-name').textContent = profile.name;
-    document.getElementById('profile-tagline').textContent = profile.tagline;
-    document.getElementById('profile-bio').textContent = profile.bio;
+    document.getElementById('profile-tagline').textContent = localizedField(profile, 'tagline');
+    document.getElementById('profile-bio').textContent = localizedField(profile, 'bio');
 
     const mbtiEl = document.getElementById('mbti-badge');
     if (profile.mbti) {
@@ -906,7 +1065,7 @@
 
     const ageEl = document.getElementById('age-badge');
     if (profile.ageStatus) {
-      document.getElementById('age-value').textContent = profile.ageStatus;
+      document.getElementById('age-value').textContent = localizedField(profile, 'ageStatus');
       ageEl.style.display = '';
     } else {
       ageEl.style.display = 'none';
@@ -922,13 +1081,14 @@
 
     const moreInfoEl = document.getElementById('more-info');
     if (profile.extraInfo) {
-      document.getElementById('more-info-content').textContent = profile.extraInfo;
+      document.getElementById('more-info-content').textContent = localizedField(profile, 'extraInfo');
       moreInfoEl.style.display = '';
     } else {
       moreInfoEl.style.display = 'none';
     }
 
     const avatarEl = document.getElementById('avatar');
+    avatarEl.innerHTML = '';
     if (profile.avatarImage) {
       const img = document.createElement('img');
       img.src = profile.avatarImage;
@@ -940,11 +1100,12 @@
 
     const year = new Date().getFullYear();
     document.getElementById('footnote').textContent =
-      '// ' + (profile.footnote || `© ${year} ${profile.name}`);
+      '// ' + (localizedField(profile, 'footnote') || `© ${year} ${profile.name}`);
   }
 
   function renderLinks() {
     const container = document.getElementById('links-container');
+    container.innerHTML = '';
 
     links.forEach(function (link) {
       const a = document.createElement('a');
@@ -963,11 +1124,11 @@
 
       const titleSpan = document.createElement('span');
       titleSpan.className = 'link-title';
-      titleSpan.textContent = link.title || '';
+      titleSpan.textContent = localizedField(link, 'title');
 
       const descSpan = document.createElement('span');
       descSpan.className = 'link-desc';
-      descSpan.textContent = link.description || '';
+      descSpan.textContent = localizedField(link, 'description');
 
       textWrap.appendChild(titleSpan);
       textWrap.appendChild(descSpan);
@@ -1029,6 +1190,7 @@
      ▲▲▲ アニメーション・楽しい仕組みはここまで ▲▲▲
      ================================================================ */
 
+  applyI18n();
   renderProfile();
   renderLinks();
   setupAvatarEasterEgg();
@@ -1070,7 +1232,7 @@
     const jst = getZoneParts('Asia/Tokyo');
 
     document.getElementById('skyJstClock').textContent = `${pad2(jst.h)}:${pad2(jst.mi)}:${pad2(jst.s)}`;
-    document.getElementById('skyClockSub').textContent = `ゲーム内時間 ${pad2(pt.h)}:${pad2(pt.mi)}`;
+    document.getElementById('skyClockSub').textContent = t('gameTime', { time: `${pad2(pt.h)}:${pad2(pt.mi)}` });
 
     // デイリーリセット: 毎日 Sky時間0:00（＝PT 0:00）
     const secOfDay = pt.h * 3600 + pt.mi * 60 + pt.s;
@@ -1080,7 +1242,7 @@
     dailyEl.textContent = `${pad2(dh)}:${pad2(dm)}:${pad2(ds)}`;
     dailyEl.classList.toggle('soon', secLeft <= 3600);
     const rh = jstResetHour();
-    document.getElementById('skyDailyResetMini').title = `デイリーリセットまで（日本時間 毎日 ${rh}:00 リセット）`;
+    document.getElementById('skyDailyResetMini').title = t('dailyResetTooltip', { hour: rh });
 
     // エデンリセット: Sky時間の日曜0:00（＝PT 日曜0:00）
     const weekdayIdx = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(pt.weekday);
@@ -1088,9 +1250,9 @@
     const edenSecLeft = (daysLeft === 0 ? 7 * 86400 : daysLeft * 86400) - secOfDay;
     const ed = Math.floor(edenSecLeft / 86400), eh = Math.floor((edenSecLeft % 86400) / 3600), em = Math.floor((edenSecLeft % 3600) / 60);
     const edenEl = document.getElementById('skyEdenCountdown');
-    edenEl.textContent = ed > 0 ? `${ed}日${pad2(eh)}時` : `${pad2(eh)}:${pad2(em)}:${pad2(edenSecLeft % 60)}`;
+    edenEl.textContent = ed > 0 ? t('edenDaysHours', { d: ed, h: pad2(eh) }) : `${pad2(eh)}:${pad2(em)}:${pad2(edenSecLeft % 60)}`;
     edenEl.classList.toggle('soon', edenSecLeft <= 3600 * 6);
-    document.getElementById('skyEdenResetMini').title = `エデンリセットまで（日本時間 日曜 ${rh}:00 リセット）`;
+    document.getElementById('skyEdenResetMini').title = t('edenResetTooltip', { hour: rh });
   }
   setInterval(updateSkyClocks, 1000);
   updateSkyClocks();
@@ -1112,12 +1274,12 @@
   }
   function fmtSkyRemain(ms) {
     const days = Math.floor(ms / 86400000);
-    if (days >= 1) return `あと${days}日`;
+    if (days >= 1) return t('remainDays', { n: days });
     const h = Math.floor(ms / 3600000);
-    if (h >= 1) return `あと${h}時間`;
+    if (h >= 1) return t('remainHours', { n: h });
     const mi = Math.floor(ms / 60000);
-    if (mi >= 1) return `あと${mi}分`;
-    return `あと${Math.max(0, Math.floor(ms / 1000))}秒`;
+    if (mi >= 1) return t('remainMinutes', { n: mi });
+    return t('remainSeconds', { n: Math.max(0, Math.floor(ms / 1000)) });
   }
   function escapeSkyHtml(s) {
     return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1150,18 +1312,22 @@
     el.classList.toggle('is-expanded');
   }
 
-  function skyCategoryRowHtml(icon, label, info, phrasing) {
+  function skyCategoryRowHtml(icon, categoryKey, info, phrasing) {
+    // categoryKey（'season'|'dailyEvent'|'revisit'）は言語に依存しない内部キー。
+    // 表示用ラベルはt()で都度求め、開閉状態(skyExpandedCategories)のキーには
+    // categoryKeyを使うことで、言語を切り替えても開閉状態が保持されるようにしている。
+    const label = t(categoryKey);
     const now = new Date();
     let text, stateClass, entry;
     if (info.active) {
       entry = info.active;
       const remain = fmtSkyRemain(entry.end - now);
-      text = phrasing ? phrasing.now(remain) : `終了まで${remain}`;
+      text = phrasing ? phrasing.now(remain) : t('endsIn', { remain });
       stateClass = 'is-now';
     } else if (info.next) {
       entry = info.next;
       const remain = fmtSkyRemain(entry.start - now);
-      text = phrasing ? phrasing.next(remain) : `開始まで${remain}`;
+      text = phrasing ? phrasing.next(remain) : t('startsIn', { remain });
       stateClass = 'is-future';
     } else {
       return `
@@ -1169,26 +1335,31 @@
         <span class="sky-active-icon">${icon}</span>
         <div class="sky-active-text">
           <div class="sky-active-name">${label}</div>
-          <div class="sky-active-remain sky-active-none">予定なし</div>
+          <div class="sky-active-remain sky-active-none">${t('noPlans')}</div>
         </div>
       </div>`;
     }
-    const range = `${fmtSkyDate(entry.start)}〜${fmtSkyDate(entry.end)}`;
-    const fullName = escapeSkyHtml(entry.ev.name);
-    const noteHtml = entry.ev.note ? `<br>${escapeSkyHtml(entry.ev.note)}` : '';
-    const titleText = `${fullName}（${range}）${entry.ev.note ? ' ／ ' + escapeSkyHtml(entry.ev.note) : ''}`;
+    const range = LANG === 'en'
+      ? `${fmtSkyDate(entry.start)} - ${fmtSkyDate(entry.end)}`
+      : `${fmtSkyDate(entry.start)}〜${fmtSkyDate(entry.end)}`;
+    const fullName = escapeSkyHtml(localizedField(entry.ev, 'name'));
+    const noteText = localizedField(entry.ev, 'note');
+    const noteHtml = noteText ? `<br>${escapeSkyHtml(noteText)}` : '';
+    const titleText = LANG === 'en'
+      ? `${fullName} (${range})${noteText ? ' / ' + escapeSkyHtml(noteText) : ''}`
+      : `${fullName}（${range}）${noteText ? ' ／ ' + escapeSkyHtml(noteText) : ''}`;
     // PCではtitle属性のホバーで、スマホ等タップ操作の環境ではこの要素自体をタップして
     // .sky-active-detail を開閉することで、どちらでも正式名称・期間を確認できるようにする。
-    const isExpanded = skyExpandedCategories.has(label);
+    const isExpanded = skyExpandedCategories.has(categoryKey);
     return `
       <div class="sky-active-item sky-active-toggle${isExpanded ? ' is-expanded' : ''}" title="${titleText}" role="button" tabindex="0"
-        onclick="skyToggleActiveDetail('${label}', this)"
-        onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();skyToggleActiveDetail('${label}', this);}">
+        onclick="skyToggleActiveDetail('${categoryKey}', this)"
+        onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();skyToggleActiveDetail('${categoryKey}', this);}">
         <span class="sky-active-icon">${icon}</span>
         <div class="sky-active-text">
           <div class="sky-active-name">${label}<span class="sky-active-expand-hint">▸</span></div>
           <div class="sky-active-remain ${stateClass}">${text}</div>
-          <div class="sky-active-detail">${fullName}（${range}）${noteHtml}</div>
+          <div class="sky-active-detail">${LANG === 'en' ? `${fullName} (${range})${noteHtml}` : `${fullName}（${range}）${noteHtml}`}</div>
         </div>
       </div>`;
   }
@@ -1207,7 +1378,7 @@
     for (let i = k - 1; i <= k + 1; i++) {
       const start = new Date(anchorStart.getTime() + i * intervalMs);
       const end = new Date(start.getTime() + durationMs);
-      const ev = { name: rule.name, note: rule.note || '' };
+      const ev = { name: rule.name, nameEn: rule.nameEn, note: rule.note || '', noteEn: rule.noteEn || '' };
       if (start <= now && now < end) {
         active = { ev, start, end };
       } else if (start > now && (!next || start < next.start)) {
@@ -1239,11 +1410,11 @@
     if (dotEl) dotEl.style.visibility = (seasonInfo.active || eventInfo.active || visitInfo.active) ? 'visible' : 'hidden';
 
     document.getElementById('skyActiveList').innerHTML =
-      skyCategoryRowHtml('🍁', '季節', seasonInfo) +
-      skyCategoryRowHtml('🎪', '日々', eventInfo) +
-      skyCategoryRowHtml('🔁', '再訪', visitInfo, {
-        now:  remain => `帰るまで${remain}`,
-        next: remain => `訪れるまで${remain}`
+      skyCategoryRowHtml('🍁', 'season', seasonInfo) +
+      skyCategoryRowHtml('🎪', 'dailyEvent', eventInfo) +
+      skyCategoryRowHtml('🔁', 'revisit', visitInfo, {
+        now:  remain => t('revisitEndsIn', { remain }),
+        next: remain => t('revisitStartsIn', { remain })
       });
   }
   renderSkyActive();
@@ -1263,20 +1434,29 @@
      ================================================================ */
   const SHARD_REALMS = ['prairie', 'forest', 'valley', 'wasteland', 'vault'];
   const SHARD_REALM_JA = { prairie: '草原', forest: '雨林', valley: '峡谷', wasteland: '捨てられた地', vault: '書庫' };
+  const SHARD_REALM_EN = { prairie: 'Prairie', forest: 'Forest', valley: 'Valley', wasteland: 'Wasteland', vault: 'Vault' };
+  function realmName(key) {
+    return LANG === 'en' ? (SHARD_REALM_EN[key] || key) : (SHARD_REALM_JA[key] || key);
+  }
   const SHARD_WD_ISO = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 7 };
   // 黒い破片2種・赤い破片3種、それぞれの初回開始時刻（PT）・間隔・発生しない曜日（ISO: 月=1〜日=7）
   // maps は [草原, 雨林, 峡谷, 捨てられた地, 書庫] の順の場所名（9bit準拠）
   const SHARD_CONFIGS = [
     { color: 'black', offsetSec: (1 * 3600 + 50 * 60), intervalSec: 8 * 3600, noShardWkDay: [6, 7],
-      maps: ['蝶々の住処', '小川', 'スケートリンク', '最初のエリア', '星月夜の砂漠（バラ付近）'] }, // 土・日は無し
+      maps: ['蝶々の住処', '小川', 'スケートリンク', '最初のエリア', '星月夜の砂漠（バラ付近）'],
+      mapsEn: ['Butterfly Fields', 'The Brook', 'Skating Rink', 'First Area', 'Starlight Desert (near the Roses)'] }, // 土・日は無し
     { color: 'black', offsetSec: (2 * 3600 + 10 * 60), intervalSec: 8 * 3600, noShardWkDay: [7, 1],
-      maps: ['草原の村', '開拓地', 'スケートリンク', '戦場', '星月夜の砂漠（バラ付近）'] }, // 日・月は無し
+      maps: ['草原の村', '開拓地', 'スケートリンク', '戦場', '星月夜の砂漠（バラ付近）'],
+      mapsEn: ['Prairie Village', 'The Clearing', 'Skating Rink', 'Battlefield', 'Starlight Desert (near the Roses)'] }, // 日・月は無し
     { color: 'red',   offsetSec: (7 * 3600 + 40 * 60), intervalSec: 6 * 3600, noShardWkDay: [1, 2],
-      maps: ['洞窟', '神殿奥', '夢見の町', '墓所', '星月夜の砂漠（舟のエリア）'] }, // 月・火は無し
+      maps: ['洞窟', '神殿奥', '夢見の町', '墓所', '星月夜の砂漠（舟のエリア）'],
+      mapsEn: ['The Cave', 'Behind the Temple', 'Village of Dreams', 'Graveyard', 'Starlight Desert (near the boats)'] }, // 月・火は無し
     { color: 'red',   offsetSec: (2 * 3600 + 20 * 60), intervalSec: 6 * 3600, noShardWkDay: [2, 3],
-      maps: ['鳥の巣', 'ツリーハウス', '夢見の町', '座礁船', '星月夜の砂漠（舟のエリア）'] }, // 火・水は無し
+      maps: ['鳥の巣', 'ツリーハウス', '夢見の町', '座礁船', '星月夜の砂漠（舟のエリア）'],
+      mapsEn: ['Bird Nest', 'Treehouse', 'Village of Dreams', 'Shipwreck', 'Starlight Desert (near the boats)'] }, // 火・水は無し
     { color: 'red',   offsetSec: (3 * 3600 + 30 * 60), intervalSec: 6 * 3600, noShardWkDay: [3, 4],
-      maps: ['楽園の島々', '晴れ間', '隠者の峠', '忘れられた方舟', '星月夜の砂漠（舟のエリア）'] }, // 水・木は無し
+      maps: ['楽園の島々', '晴れ間', '隠者の峠', '忘れられた方舟', '星月夜の砂漠（舟のエリア）'],
+      mapsEn: ['Paradise Islands', 'Sunny Break', "Hermit's Pass", 'Forgotten Ark', 'Starlight Desert (near the boats)'] }, // 水・木は無し
   ];
   const SHARD_DURATION_SEC = 4 * 3600; // 破片は出現から4時間で消える
 
@@ -1290,6 +1470,7 @@
       color: cfg.color,
       realmIdx,
       place: cfg.maps[realmIdx],
+      placeEn: (cfg.mapsEn && cfg.mapsEn[realmIdx]) || cfg.maps[realmIdx],
       offsetSec: cfg.offsetSec,
       intervalSec: cfg.intervalSec,
       hasShardToday: !cfg.noShardWkDay.includes(weekdayIso)
@@ -1310,7 +1491,7 @@
         if (secOfDayNow < endSec) {
           const start = new Date(now.getTime() + (startSec - secOfDayNow) * 1000);
           const end = new Date(now.getTime() + (endSec - secOfDayNow) * 1000);
-          return { active: secOfDayNow >= startSec, color: today.color, place: today.place, realmIdx: today.realmIdx, start, end };
+          return { active: secOfDayNow >= startSec, color: today.color, place: today.place, placeEn: today.placeEn, realmIdx: today.realmIdx, start, end };
         }
       }
     }
@@ -1324,7 +1505,7 @@
         const endSec = startSec + SHARD_DURATION_SEC;
         const start = new Date(now.getTime() + (startSec - secOfDayNow) * 1000);
         const end = new Date(now.getTime() + (endSec - secOfDayNow) * 1000);
-        return { active: false, color: info.color, place: info.place, realmIdx: info.realmIdx, start, end };
+        return { active: false, color: info.color, place: info.place, placeEn: info.placeEn, realmIdx: info.realmIdx, start, end };
       }
     }
     return null;
@@ -1338,6 +1519,7 @@
     if (!status) { badgeEl.style.display = 'none'; return; }
 
     const now = new Date();
+    const place = LANG === 'en' ? (status.placeEn || status.place) : status.place;
 
     // 開催中でなければ、日本時間の「今日」の範囲内に開始するものだけを対象にする
     if (!status.active) {
@@ -1346,22 +1528,22 @@
       const isStartToday = todayJst.y === startJst.y && todayJst.mo === startJst.mo && todayJst.d === startJst.d;
       if (!isStartToday) {
         dotEl.className = 'shard-dot';
-        textEl.textContent = 'なし';
+        textEl.textContent = t('shardNone');
         badgeEl.classList.add('upcoming');
-        badgeEl.title = '本日（日本時間）はこの後、闇の破片の出現予定はありません';
+        badgeEl.title = t('shardNoneTodayTooltip');
         return;
       }
     }
 
-    const colorName = status.color === 'red' ? '赤い破片' : '黒い破片';
+    const colorName = status.color === 'red' ? t('redShard') : t('blackShard');
     const remain = fmtSkyRemain(status.active ? (status.end - now) : (status.start - now));
 
     dotEl.className = `shard-dot ${status.color} ${status.active ? 'active' : ''}`;
-    textEl.textContent = status.place;
+    textEl.textContent = place;
     badgeEl.classList.toggle('upcoming', !status.active);
     badgeEl.title = status.active
-      ? `${colorName}が来ています（${SHARD_REALM_JA[SHARD_REALMS[status.realmIdx]] || ''}・${status.place}）／終了まで${remain}`
-      : `${colorName}が来ます（${status.place}）／開始まで${remain}`;
+      ? t('shardActiveTooltip', { color: colorName, realm: realmName(SHARD_REALMS[status.realmIdx]), place, remain })
+      : t('shardUpcomingTooltip', { color: colorName, place, remain });
   }
   renderShardBadge();
   setInterval(renderShardBadge, 30000);
