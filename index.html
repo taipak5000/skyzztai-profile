@@ -800,6 +800,29 @@
     transition: border-color 0.2s ease, background-color 0.2s ease;
   }
   .settings-toggle-btn:hover { border-color: var(--sky); background: var(--row); }
+  .settings-lang-row {
+    display: flex;
+    gap: 8px;
+  }
+  .settings-lang-btn {
+    flex: 1;
+    background: var(--panel-alt);
+    border: 1px solid var(--border-strong);
+    color: var(--text);
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 13px;
+    border-radius: 10px;
+    padding: 9px 10px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+  }
+  .settings-lang-btn:hover { border-color: var(--sky); }
+  .settings-lang-btn.active {
+    background: var(--sky-deep);
+    border-color: var(--sky-deep);
+    color: #F8FAFC;
+  }
   .settings-checkbox {
     width: 19px;
     height: 19px;
@@ -975,6 +998,14 @@
       <div class="settings-key-row"><span class="settings-key">?</span><span data-i18n="shortcutOpenSettings">この設定を開く</span></div>
       <div class="settings-key-row"><span class="settings-key">D</span><span data-i18n="shortcutToggleDark">ダークモード切替</span></div>
       <div class="settings-key-row"><span class="settings-key">Esc</span><span data-i18n="shortcutCloseWindow">開いているウィンドウを閉じる</span></div>
+    </div>
+
+    <div class="settings-section">
+      <p class="settings-section-label" data-i18n="settingsLangSection">🌐 言語 / Language</p>
+      <div class="settings-lang-row">
+        <button type="button" class="settings-lang-btn" id="settingsLangJaBtn" lang="ja" onclick="if(LANG!=='ja')setLang('ja')">日本語</button>
+        <button type="button" class="settings-lang-btn" id="settingsLangEnBtn" lang="en" onclick="if(LANG!=='en')setLang('en')">English</button>
+      </div>
     </div>
 
     <button type="button" class="settings-close-btn" onclick="settingsClose()" data-i18n="closeButton">閉じる</button>
@@ -1230,6 +1261,7 @@
     shortcutOpenSettings: { ja: 'この設定を開く', en: 'Open this settings panel' },
     shortcutToggleDark: { ja: 'ダークモード切替', en: 'Toggle dark mode' },
     shortcutCloseWindow: { ja: '開いているウィンドウを閉じる', en: 'Close the open window' },
+    settingsLangSection: { ja: '🌐 言語 / Language', en: '🌐 Language' },
     closeButton: { ja: '閉じる', en: 'Close' }
   };
 
@@ -1286,6 +1318,24 @@
     syncSettingsUI();
   }
 
+  // ⚙️ 表示設定モーダル内の🌐言語セレクター用：ボタンを押すたびに交互に切り替える
+  // toggleLang()とは違い、押した言語に直接切り替える（同じ言語のボタンを押しても
+  // 何も起きない安全なno-op。呼び出し側のonclickでも同条件でガード済み）。
+  // 副作用はtoggleLang()と同じもの。
+  function setLang(lang) {
+    if (lang !== 'ja' && lang !== 'en') return;
+    if (LANG === lang) return;
+    LANG = lang;
+    setStoredLang(LANG);
+    applyI18n();
+    renderProfile();
+    renderLinks();
+    updateSkyClocks();
+    renderSkyActive();
+    renderShardBadge();
+    syncSettingsUI();
+  }
+
   /* ================================================================
      ⚙️ 表示設定（ダークモード・キーボードショートカット）
      taipak5000.github.io 配下の全ツール共通のキーで保存する
@@ -1330,6 +1380,14 @@
     if (btn) btn.textContent = isDarkModeOn() ? t('darkModeOnLabel') : t('darkModeOffLabel');
     const cb = document.getElementById('settingsShortcutsCheckbox');
     if (cb) cb.checked = skyShortcutsEnabled();
+    const langJaBtn = document.getElementById('settingsLangJaBtn');
+    const langEnBtn = document.getElementById('settingsLangEnBtn');
+    if (langJaBtn && langEnBtn) {
+      langJaBtn.classList.toggle('active', LANG === 'ja');
+      langJaBtn.setAttribute('aria-pressed', LANG === 'ja' ? 'true' : 'false');
+      langEnBtn.classList.toggle('active', LANG === 'en');
+      langEnBtn.setAttribute('aria-pressed', LANG === 'en' ? 'true' : 'false');
+    }
   }
   function settingsOpen() {
     syncSettingsUI();
