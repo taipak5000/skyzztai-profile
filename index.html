@@ -106,7 +106,7 @@
     background: linear-gradient(160deg, rgba(56,189,248,0.12), rgba(19,30,48,0.92));
   }
   [data-theme="dark"] .sky-reset-val.soon { color: #FBBF24; }
-  [data-theme="dark"] .footnote { color: rgba(148, 163, 184, 0.55); }
+  [data-theme="dark"] .footnote { color: rgba(148, 163, 184, 0.8); }
 
   * { box-sizing: border-box; }
 
@@ -690,7 +690,7 @@
   /* ---------- フッター ---------- */
   .footnote {
     text-align: center;
-    color: rgba(15, 23, 42, 0.45);
+    color: rgba(15, 23, 42, 0.62);
     font-size: 12px;
     letter-spacing: 0.02em;
     margin: 28px 0 0;
@@ -919,7 +919,7 @@
           </div>
         </div>
 
-        <div class="avatar-wrap" id="avatar-wrap" title="タップしてみてね" data-i18n-title="tapMe">
+        <div class="avatar-wrap" id="avatar-wrap" role="button" tabindex="0" title="タップしてみてね" data-i18n-title="tapMe">
           <div class="avatar" id="avatar"></div>
           <div class="shard-badge" id="shardBadge" role="button" tabindex="0"
             onclick="event.stopPropagation();this.classList.toggle('tap-open')"
@@ -966,16 +966,16 @@
     </section>
   </main>
 
-  <p class="footnote" style="margin-top:6px; opacity:0.75;" data-i18n="unofficialDisclaimer">このサイトはSky 星を紡ぐ子どもたちの非公式ファンサイトです。thatgamecompanyは一切関与していません。</p>
+  <p class="footnote" style="margin-top:6px;" data-i18n="unofficialDisclaimer">このサイトはSky 星を紡ぐ子どもたちの非公式ファンサイトです。thatgamecompanyは一切関与していません。</p>
   <p class="footnote" id="footnote"></p>
   <p class="footnote" style="margin-top:6px;"><a href="https://taipak5000.github.io/tai-info/" style="color:inherit; text-decoration:underline; text-underline-offset:2px;" data-i18n="settingsLink">⚙️ 設定・更新情報・クレジット・プライバシーポリシー</a></p>
 </div>
 
 <!-- ⚙️ 表示設定モーダル（ダークモード・キーボードショートカット） -->
 <div class="settings-modal-overlay" id="settingsModalOverlay" onclick="if(event.target===this) settingsClose()">
-  <div class="settings-modal-card">
+  <div class="settings-modal-card" id="settingsModalCard" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitleText" tabindex="-1">
     <h3>
-      <span>⚙️ <span data-i18n="settingsTitle">表示設定</span></span>
+      <span id="settingsModalTitleText">⚙️ <span data-i18n="settingsTitle">表示設定</span></span>
       <button type="button" class="settings-close-x" onclick="settingsClose()" aria-label="Close">✕</button>
     </h3>
 
@@ -992,7 +992,7 @@
       <p class="settings-section-label" data-i18n="settingsShortcutsSection">⌨️ キーボードショートカット</p>
       <div class="settings-row">
         <span aria-hidden="true">⌨️</span>
-        <span class="settings-row-text" data-i18n="shortcutsEnableLabel">ショートカットを有効にする</span>
+        <label class="settings-row-text" for="settingsShortcutsCheckbox" data-i18n="shortcutsEnableLabel">ショートカットを有効にする</label>
         <input type="checkbox" class="settings-checkbox" id="settingsShortcutsCheckbox" onchange="settingsSaveShortcutsPref(this.checked)">
       </div>
       <div class="settings-key-row"><span class="settings-key">?</span><span data-i18n="shortcutOpenSettings">この設定を開く</span></div>
@@ -1389,12 +1389,61 @@
       langEnBtn.setAttribute('aria-pressed', LANG === 'en' ? 'true' : 'false');
     }
   }
+  // ⌨️ モーダル内でのフォーカストラップ用：開いた時点でフォーカスされていた要素
+  // （＝トリガー。⚙️ボタンのクリック or「?」ショートカット）を覚えておき、
+  // 閉じるときにそこへフォーカスを戻す。
+  let settingsPrevFocusEl = null;
+
+  // モーダル内でTab移動の対象になる要素（表示されているものだけ）を取得する
+  function settingsFocusableEls() {
+    const card = document.getElementById('settingsModalCard');
+    const all = card.querySelectorAll(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+    return Array.prototype.filter.call(all, function (el) { return el.offsetParent !== null; });
+  }
+
+  // Tabキーがモーダルの外（＝背後のページ）に出ていかないよう、最初/最後の要素で折り返す
+  function settingsTrapKeydown(e) {
+    if (e.key !== 'Tab') return;
+    const focusable = settingsFocusableEls();
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey) {
+      if (document.activeElement === first || !document.getElementById('settingsModalCard').contains(document.activeElement)) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else {
+      if (document.activeElement === last || !document.getElementById('settingsModalCard').contains(document.activeElement)) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  }
+
   function settingsOpen() {
+    // 既に開いている場合は何もしない（例：モーダルを開いた状態でもう一度「?」
+    // ショートカットが押された場合。ここでガードしないとsettingsPrevFocusElが
+    // モーダル内の要素で上書きされてしまい、閉じたときにフォーカスの戻し先を見失う）
+    if (document.getElementById('settingsModalOverlay').classList.contains('open')) return;
     syncSettingsUI();
+    settingsPrevFocusEl = document.activeElement;
     document.getElementById('settingsModalOverlay').classList.add('open');
+    // フォーカスをモーダル内に移す（最初の操作可能な要素へ。無ければモーダル自体へ）
+    const focusable = settingsFocusableEls();
+    (focusable[0] || document.getElementById('settingsModalCard')).focus();
+    document.addEventListener('keydown', settingsTrapKeydown, true);
   }
   function settingsClose() {
     document.getElementById('settingsModalOverlay').classList.remove('open');
+    document.removeEventListener('keydown', settingsTrapKeydown, true);
+    // フォーカスを開く前の要素（トリガー）に戻す
+    if (settingsPrevFocusEl && typeof settingsPrevFocusEl.focus === 'function') {
+      settingsPrevFocusEl.focus();
+    }
+    settingsPrevFocusEl = null;
   }
 
   // ⌨️ Escキーで、開いていれば表示設定モーダルを閉じる（このリポジトリには
@@ -1549,17 +1598,27 @@
     }
   }
 
-  // アバターをタップするとシャボン玉が弾ける
+  // アバターをタップ（またはEnter/Spaceで操作）するとシャボン玉が弾ける。
+  // #shardBadge・#skyDailyResetMini等の他のタップ可能要素と同様、
+  // role="button"+tabindex="0"（HTML側）とキーボード操作の両対応。
   function setupAvatarEasterEgg() {
     const avatarWrap = document.getElementById('avatar-wrap');
     const avatarEl = document.getElementById('avatar');
 
-    avatarWrap.addEventListener('click', function () {
+    function triggerAvatarEasterEgg() {
       const rect = avatarWrap.getBoundingClientRect();
       burstParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, 8);
       avatarEl.classList.remove('boing');
       void avatarEl.offsetWidth; // アニメーションを再生し直すためのリフロー
       avatarEl.classList.add('boing');
+    }
+
+    avatarWrap.addEventListener('click', triggerAvatarEasterEgg);
+    avatarWrap.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        triggerAvatarEasterEgg();
+      }
     });
 
     avatarEl.addEventListener('animationend', function () {
