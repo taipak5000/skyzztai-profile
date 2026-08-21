@@ -52,8 +52,15 @@
     --sky: #0284C7;          /* メインの水色（テキストでも読めるよう暗め） */
     --sky-bright: #0369A1;   /* 強調用の水色（ホバー用） */
     --sky-deep: #0EA5E9;     /* 濃い水色（バッジ等の塗り。両テーマ共通） */
+    --sky-deep-contrast: #075985; /* --sky-deepを白文字の背景に使うとAAコントラスト(4.5:1)を
+                                      満たせないため用意した、より暗い水色。両テーマ共通。
+                                      設定モーダルの選択中言語ボタン・アバターの頭文字
+                                      フォールバックの背景で使用 */
     --teal: #0F766E;         /* 差し色(青緑。テキストでも読めるよう暗め) */
     --indigo: #818CF8;       /* 差し色（青紫） */
+    --indigo-contrast: #4338CA; /* --indigoを白文字の背景に使うとAAコントラストを満たせない
+                                    ため用意した、より暗い青紫。両テーマ共通。アバターの
+                                    頭文字フォールバックの背景（グラデーション）で使用 */
     --radius: 16px;
 
     /* 画面サイズに応じて広がる余白 */
@@ -271,7 +278,7 @@
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: linear-gradient(145deg, var(--sky-deep), var(--indigo));
+    background: linear-gradient(145deg, var(--sky-deep-contrast), var(--indigo-contrast));
     color: #F8FAFC;
     display: flex;
     align-items: center;
@@ -819,8 +826,8 @@
   }
   .settings-lang-btn:hover { border-color: var(--sky); }
   .settings-lang-btn.active {
-    background: var(--sky-deep);
-    border-color: var(--sky-deep);
+    background: var(--sky-deep-contrast);
+    border-color: var(--sky-deep-contrast);
     color: #F8FAFC;
   }
   .settings-checkbox {
@@ -1232,10 +1239,13 @@
     edenDaysHours: { ja: '{d}日{h}時', en: '{d}d {h}h' },
     season: { ja: '季節', en: 'Season' },
     dailyEvent: { ja: '日々', en: 'Days' },
+    travelingSpirit: { ja: '旅の精霊', en: 'Traveling Spirit' },
     revisit: { ja: '再訪', en: 'Revisit' },
     noPlans: { ja: '予定なし', en: 'None scheduled' },
     endsIn: { ja: '終了まで{remain}', en: 'Ends in {remain}' },
     startsIn: { ja: '開始まで{remain}', en: 'Starts in {remain}' },
+    travelingSpiritEndsIn: { ja: '帰るまで{remain}', en: 'Leaves in {remain}' },
+    travelingSpiritStartsIn: { ja: '来るまで{remain}', en: 'Arrives in {remain}' },
     revisitEndsIn: { ja: '帰るまで{remain}', en: 'Leaves in {remain}' },
     revisitStartsIn: { ja: '訪れるまで{remain}', en: 'Arrives in {remain}' },
     remainDays: { ja: 'あと{n}日', en: '{n}d' },
@@ -1698,9 +1708,9 @@
   updateSkyClocks();
 
   /* ================================================================
-     📅 Sky Status：季節・日々（イベント）・再訪の状況を常に3行で表示
+     📅 Sky Status：季節・日々（イベント）・旅の精霊・再訪の状況を常に4行で表示
      季節名やイベント名は長いため、実際の名前の代わりに種別名
-     （季節／日々／再訪）を表示し、実際の名前は説明（title属性）で確認できます。
+     （季節／日々／旅の精霊／再訪）を表示し、実際の名前は説明（title属性）で確認できます。
      ================================================================ */
   // skySchedule の日時（JST表記）を、閲覧環境のタイムゾーンに関係なくJSTとして解釈する
   // 'YYYY-MM-DDTHH:mm'（16文字）と 'YYYY-MM-DDTHH:mm:ss'（19文字、endの秒指定用）の両方に対応
@@ -1844,14 +1854,19 @@
   function renderSkyActive() {
     const seasonInfo = findActiveOrNext(skySchedule.seasons);
     const eventInfo = findActiveOrNext(skySchedule.events);
+    const travelingSpiritInfo = findActiveOrNext(skySchedule.travelingSpirits);
     const visitInfo = findVisitInfo();
 
     const dotEl = document.getElementById('skyNowDot');
-    if (dotEl) dotEl.style.visibility = (seasonInfo.active || eventInfo.active || visitInfo.active) ? 'visible' : 'hidden';
+    if (dotEl) dotEl.style.visibility = (seasonInfo.active || eventInfo.active || travelingSpiritInfo.active || visitInfo.active) ? 'visible' : 'hidden';
 
     document.getElementById('skyActiveList').innerHTML =
       skyCategoryRowHtml('🍁', 'season', seasonInfo) +
       skyCategoryRowHtml('🎪', 'dailyEvent', eventInfo) +
+      skyCategoryRowHtml('✨', 'travelingSpirit', travelingSpiritInfo, {
+        now:  remain => t('travelingSpiritEndsIn', { remain }),
+        next: remain => t('travelingSpiritStartsIn', { remain })
+      }) +
       skyCategoryRowHtml('🔁', 'revisit', visitInfo, {
         now:  remain => t('revisitEndsIn', { remain }),
         next: remain => t('revisitStartsIn', { remain })
