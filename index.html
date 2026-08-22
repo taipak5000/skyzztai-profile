@@ -21,6 +21,25 @@
 </script>
 <title>Profile</title>
 <meta name="description" content="自己紹介ページ" />
+<!-- 🔗 OGP / Twitter Card：SNS等でこのページのURLを共有したときにプレビューカードを
+     表示させるためのタグ。ここは静的HTMLとして読み取られる（クローラーはJSを実行しない
+     前提で運用する）ため、下のprofile変数と違い言語切り替えには追従しない固定値。 -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="たい | Profile" />
+<meta property="og:description" content="ものづくりが好きです" />
+<meta property="og:url" content="https://taipak5000.github.io/skyzztai-profile/" />
+<meta property="og:site_name" content="たい | Profile" />
+<meta property="og:image" content="https://taipak5000.github.io/skyzztai-profile/icons/app-icon-512.png" />
+<meta property="og:image:width" content="512" />
+<meta property="og:image:height" content="512" />
+<meta property="og:image:alt" content="プロフィールアイコン" />
+<meta property="og:locale" content="ja_JP" />
+<meta property="og:locale:alternate" content="en_US" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:site" content="@skyzztai" />
+<meta name="twitter:title" content="たい | Profile" />
+<meta name="twitter:description" content="ものづくりが好きです" />
+<meta name="twitter:image" content="https://taipak5000.github.io/skyzztai-profile/icons/app-icon-512.png" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='42' fill='%2338BDF8'/%3E%3C/svg%3E" />
 <link rel="manifest" href="manifest.json" />
 <link rel="apple-touch-icon" href="icons/app-icon-192.png" />
@@ -537,7 +556,7 @@
   .link-row:focus-visible .link-title { color: var(--sky-bright); }
 
   .link-arrow {
-    color: var(--sky);
+    color: var(--sky-bright);
     font-weight: 700;
     font-size: 14px;
     flex-shrink: 0;
@@ -873,6 +892,35 @@
     transition: border-color 0.2s ease;
   }
   .settings-close-btn:hover { border-color: var(--border-strong); }
+
+  /* ---------- 🔔 トースト通知 ---------- */
+  /* 通知面はページのライト/ダークどちらのテーマでも読みやすいよう、
+     テーマトークンには乗せずあえて固定の暗色パネルにしている
+     （--textのライト値 #0F172A と同系色。他のskyzztaiツールのトーストも同様の配色）。 */
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: max(24px, env(safe-area-inset-bottom));
+    transform: translateX(-50%) translateY(12px);
+    background: rgba(15, 23, 42, 0.92);
+    color: #F8FAFC;
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    max-width: calc(100vw - 32px);
+    text-align: center;
+    box-shadow: 0 12px 28px -12px rgba(0,0,0,0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 200;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 </style>
 </head>
 <body>
@@ -896,6 +944,7 @@
         <span class="term-dot"></span>
       </span>
       <p class="card-label" id="card-label"></p>
+      <button type="button" class="lang-toggle" id="copyLinkToggle" onclick="copyProfileLink()" title="リンクをコピー" data-i18n-title="copyLinkButtonTitle" aria-label="Copy profile link / プロフィールのリンクをコピー">🔗</button>
       <button type="button" class="lang-toggle" id="settingsToggle" onclick="settingsOpen()" title="表示設定" data-i18n-title="settingsButtonTitle" aria-label="Display settings / 表示設定">⚙️</button>
       <button type="button" class="lang-toggle" id="langToggle" onclick="toggleLang()" aria-label="Switch language / 言語を切り替える">EN</button>
     </div>
@@ -1018,6 +1067,9 @@
     <button type="button" class="settings-close-btn" onclick="settingsClose()" data-i18n="closeButton">閉じる</button>
   </div>
 </div>
+
+<!-- 🔔 トースト通知（リンクコピー成功時などの短い確認メッセージ用） -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
   /* ================================================================
@@ -1272,7 +1324,12 @@
     shortcutToggleDark: { ja: 'ダークモード切替', en: 'Toggle dark mode' },
     shortcutCloseWindow: { ja: '開いているウィンドウを閉じる', en: 'Close the open window' },
     settingsLangSection: { ja: '🌐 言語 / Language', en: '🌐 Language' },
-    closeButton: { ja: '閉じる', en: 'Close' }
+    closeButton: { ja: '閉じる', en: 'Close' },
+
+    // 🔗 プロフィールリンクのコピー
+    copyLinkButtonTitle: { ja: 'リンクをコピー', en: 'Copy link' },
+    linkCopiedToast: { ja: 'リンクをコピーしました！', en: 'Link copied!' },
+    linkCopyFailedToast: { ja: 'コピーに失敗しました', en: 'Failed to copy the link' }
   };
 
   // key に対応する訳文を返す。{name} 形式のプレースホルダーは vars で置換する
@@ -1485,6 +1542,51 @@
     if (e.key === '?') { e.preventDefault(); settingsOpen(); return; }
     if (e.key === 'd' || e.key === 'D') { e.preventDefault(); toggleTheme(); return; }
   });
+
+  /* ================================================================
+     🔔 トースト通知（短い確認メッセージを画面下部に一時表示する）
+     ================================================================ */
+  let toastTimer = null;
+  function showToast(msg) {
+    const el = document.getElementById('toast');
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.classList.remove('show'); }, 1800);
+  }
+
+  /* ================================================================
+     🔗 このページ自身のURLをコピーする（プロフィールをシェアしたい人向け）
+     Clipboard APIが使えない環境（非HTTPS・古いブラウザ等）では、
+     見えないtextareaを使ったdocument.execCommand('copy')にフォールバックする。
+     ================================================================ */
+  async function copyProfileLink() {
+    const url = window.location.href;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(url);
+        showToast(t('linkCopiedToast'));
+        return;
+      } catch (e) {
+        // 下のフォールバックへ
+      }
+    }
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = url;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast(t('linkCopiedToast'));
+    } catch (e) {
+      showToast(t('linkCopyFailedToast'));
+    }
+  }
 
   function renderProfile() {
     const initial = (profile.name || "?").trim().charAt(0);
@@ -1874,6 +1976,32 @@
   }
   renderSkyActive();
   setInterval(renderSkyActive, 1000);
+
+  /* ================================================================
+     🛡️ スケジュール安全装置（管理者向け）
+     skySchedule.events は「日々」イベントを常に1件は入れておく想定だが、
+     空になっても画面上は静かに「予定なし」と表示されるだけで気づきにくい。
+     ページ利用者には見えない console.warn だけの軽量なチェックとして、
+     events が空、または登録されている項目がすべて終了している場合に
+     開発者ツールのコンソールへ警告を出す（ページ読み込み時に1回だけ）。
+     ================================================================ */
+  function checkScheduleHealth() {
+    const now = new Date();
+    const events = skySchedule.events || [];
+    const hasCurrentOrUpcoming = events.some(function (ev) {
+      const end = parseSkyJst(ev.end);
+      return !isNaN(end) && end >= now;
+    });
+    if (!hasCurrentOrUpcoming) {
+      console.warn(
+        '⚠️ [Sky Status] skySchedule.events が空か、登録されている項目がすべて終了しています。' +
+        'index.html 内の skySchedule.events に新しい「日々」イベントを追加してください。\n' +
+        '⚠️ [Sky Status] skySchedule.events is empty, or every entry in it has already ended. ' +
+        'Please add a new "Days" event to skySchedule.events in index.html.'
+      );
+    }
+  }
+  checkScheduleHealth();
 
   /* ================================================================
      🔺 闇の破片（シャード）の有無・色・場所
