@@ -158,16 +158,205 @@
       linear-gradient(180deg, #EEF5FC 0%, #F7FBFF 50%, #EEF5FC 100%);
     background-size: auto, auto, auto, auto, 34px 34px, 34px 34px, 100% 100%;
     background-attachment: fixed;
+    /* 🧭 下部クイックアクセスドック（固定・高さ76px+セーフエリア）に本文が隠れないよう確保。
+       page-pad-b は「ドックが無かった頃からの最後の要素の下の余白」をそのまま維持している。
+       左右／上の余白は .app-layout / .stage 側（他姉妹サイトと共通の構造）に移した。 */
+    padding: 0 0 calc(var(--page-pad-b) + 76px + env(safe-area-inset-bottom));
+  }
+
+  /* ---------- 🧭 ヘッダー（姉妹サイト共通：sticky・z-index:20） ---------- */
+  .site-nav {
+    position: sticky;
+    top: 0;
+    z-index: 20;
     display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px clamp(12px, 3vw, 24px);
+    background: rgba(238, 245, 252, 0.82);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+  [data-theme="dark"] .site-nav { background: rgba(11, 18, 32, 0.82); }
+  .site-nav-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sidebar-toggle-btn {
+    flex-shrink: 0;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--sky-bright);
+    background: var(--panel);
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    padding: 6px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+  }
+  .sidebar-toggle-btn:hover,
+  .sidebar-toggle-btn:focus-visible { border-color: var(--sky); background: var(--row); }
+  @media (min-width: 850px) { .sidebar-toggle-btn { visibility: hidden; } }
+
+  /* ---------- 🧭 メイン領域＋サイドバー（720px/960pxブレークポイント。姉妹サイト共通） ---------- */
+  .app-layout {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 16px;
+  }
+  @media (min-width: 850px) {
+    .app-layout { max-width: 960px; display: flex; gap: 20px; align-items: flex-start; }
+  }
+
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 499;
+    background: rgba(0, 0, 0, 0.45);
+  }
+  .sidebar-overlay.show { display: block; animation: sidebar-fade 0.2s ease; }
+  @keyframes sidebar-fade { from { opacity: 0; } to { opacity: 1; } }
+
+  .sidebar {
+    width: 200px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 58px;
+    margin-top: var(--page-pad-y);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: 0 1px 4px rgba(2, 132, 199, 0.1);
+    display: none;
+  }
+  @media (min-width: 850px) { .sidebar { display: block; } }
+  .sidebar.sidebar-open {
+    display: flex !important;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 240px;
+    z-index: 500;
+    overflow-y: auto;
+    margin-top: 0;
+    border-radius: 0 12px 12px 0;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
+  }
+  .sidebar-close-btn {
+    display: none;
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 20px;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .sidebar.sidebar-open .sidebar-close-btn { display: block; }
+  .sidebar-section-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .sidebar-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    margin-bottom: 2px;
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: background-color 0.2s ease;
+  }
+  .sidebar-nav-link:hover,
+  .sidebar-nav-link:focus-visible { background: var(--row); }
+  .sidebar-nav-link.current-tool {
+    background: var(--panel-alt);
+    color: var(--sky-bright);
+    font-weight: 700;
+    cursor: default;
+  }
+
+  /* ---------- 🧭 下部クイックアクセスドック（姉妹サイト共通：fixed・z-index:90） ---------- */
+  .site-dock {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 90;
+    padding: 6px 10px calc(8px + env(safe-area-inset-bottom));
+    background: var(--panel);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-top: 1px solid var(--border);
+    justify-content: space-around;
+    align-items: stretch;
+    gap: 4px;
+  }
+  .site-dock button {
+    flex: 1 1 0;
+    max-width: 110px;
+    min-height: 52px;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
-    padding: var(--page-pad-y) var(--page-pad-x) var(--page-pad-b);
+    gap: 2px;
+    padding: 6px 0;
+    border-radius: 12px;
+    font-family: inherit;
+    transition: background-color 0.2s ease;
+  }
+  .site-dock button:hover,
+  .site-dock button:active,
+  .site-dock button:focus-visible { background: var(--row); }
+  .site-dock .site-dock-icon { font-size: 19px; line-height: 1; }
+  .site-dock .site-dock-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .stage {
     position: relative;
     z-index: 1;
+    flex: 1 1 auto;
+    min-width: 0;
     width: 100%;
     max-width: 680px;
+    margin: var(--page-pad-y) auto 0;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -752,7 +941,7 @@
     display: none;
     position: fixed;
     inset: 0;
-    z-index: 100;
+    z-index: 1000;
     background: rgba(0,0,0,0.5);
     align-items: center;
     justify-content: center;
@@ -905,7 +1094,7 @@
   .toast {
     position: fixed;
     left: 50%;
-    bottom: max(24px, env(safe-area-inset-bottom));
+    bottom: calc(84px + env(safe-area-inset-bottom));
     transform: translateX(-50%) translateY(12px);
     background: rgba(15, 23, 42, 0.92);
     color: #F8FAFC;
@@ -920,7 +1109,7 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s ease, transform 0.2s ease;
-    z-index: 200;
+    z-index: 2000;
   }
   .toast.show {
     opacity: 1;
@@ -939,6 +1128,34 @@
   それより上のHTML/CSSは基本的に触らなくてもそのまま使えます。
   ================================================================
 -->
+
+<header class="site-nav">
+  <span class="site-nav-title" data-i18n="navTitle">👤 プロフィール</span>
+  <button type="button" class="sidebar-toggle-btn" onclick="openSidebarMobile()" data-i18n="sidebarHamburger">☰ ツール</button>
+</header>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebarMobile()"></div>
+
+<div class="app-layout">
+
+  <aside class="sidebar" id="sidebar">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+      <span class="sidebar-section-label" style="margin-bottom:0;" data-i18n="sidebarRelatedTools">🔗 関連ツール</span>
+      <button type="button" class="sidebar-close-btn" onclick="closeSidebarMobile()" aria-label="Close" data-i18n="sidebarClose">×</button>
+    </div>
+    <nav aria-label="関連ツール">
+      <a href="https://taipak5000.github.io/tai-item/" class="sidebar-nav-link" data-i18n="toolItem">🗂️ アイテム所持管理</a>
+      <a href="https://taipak5000.github.io/tai-emote/" class="sidebar-nav-link" data-i18n="toolEmote">🎭 エモート所持率管理</a>
+      <a href="https://taipak5000.github.io/share/" class="sidebar-nav-link" data-i18n="toolShare">📌 創作物管理ツール</a>
+      <a href="https://taipak5000.github.io/tai-nomacan/" class="sidebar-nav-link" data-i18n="toolNomacan">🕯️ ノマキャン計算機</a>
+      <a href="https://taipak5000.github.io/star-candle/" class="sidebar-nav-link" data-i18n="toolStarCandle">🕯️ 星のキャンドル計算機</a>
+      <a href="https://taipak5000.github.io/companion/" class="sidebar-nav-link" data-i18n="toolCompanion">✨ 精霊同行ツール</a>
+      <a href="https://taipak5000.github.io/wings/" class="sidebar-nav-link" data-i18n="toolWings">🪽 羽トラッカー</a>
+      <a href="https://taipak5000.github.io/tai-transfer/" class="sidebar-nav-link" data-i18n="toolDataTransfer">🔄 データ引継ぎ</a>
+      <span class="sidebar-nav-link current-tool" data-i18n="toolProfile">👤 作者プロフィール（現在地）</span>
+      <a href="https://taipak5000.github.io/tai-info/" class="sidebar-nav-link" data-i18n="toolInfo">⚙️ 設定・更新情報</a>
+    </nav>
+  </aside>
 
 <div class="stage">
   <main class="card" id="card">
@@ -1030,6 +1247,28 @@
   <p class="footnote" style="margin-top:6px;" data-i18n="unofficialDisclaimer">このサイトはSky 星を紡ぐ子どもたちの非公式ファンサイトです。thatgamecompanyは一切関与していません。</p>
   <p class="footnote" id="footnote"></p>
   <p class="footnote" style="margin-top:6px;"><a href="https://taipak5000.github.io/tai-info/" style="color:inherit; text-decoration:underline; text-underline-offset:2px;" data-i18n="settingsLink">⚙️ 設定・更新情報・クレジット・プライバシーポリシー</a></p>
+</div><!-- /.stage -->
+
+</div><!-- /.app-layout -->
+
+<!-- 🧭 画面下部クイックアクセスドック（プロフィール／ダッシュボード／他のツール／表示設定） -->
+<div class="site-dock" role="navigation" aria-label="クイックメニュー">
+  <button type="button" onclick="dockGoProfile()">
+    <span class="site-dock-icon">👤</span>
+    <span class="site-dock-label" data-i18n="dockProfile">プロフィール</span>
+  </button>
+  <button type="button" onclick="dockGoDashboard()">
+    <span class="site-dock-icon">🗓️</span>
+    <span class="site-dock-label" data-i18n="dockDashboard">ダッシュボード</span>
+  </button>
+  <button type="button" onclick="openSidebarMobile()">
+    <span class="site-dock-icon">☰</span>
+    <span class="site-dock-label" data-i18n="dockOtherTools">他のツール</span>
+  </button>
+  <button type="button" onclick="settingsOpen()">
+    <span class="site-dock-icon">⚙️</span>
+    <span class="site-dock-label" data-i18n="dockSettings">表示設定</span>
+  </button>
 </div>
 
 <!-- ⚙️ 表示設定モーダル（ダークモード・キーボードショートカット） -->
@@ -1330,7 +1569,27 @@
     // 🔗 プロフィールリンクのコピー
     copyLinkButtonTitle: { ja: 'リンクをコピー', en: 'Copy link' },
     linkCopiedToast: { ja: 'リンクをコピーしました！', en: 'Link copied!' },
-    linkCopyFailedToast: { ja: 'コピーに失敗しました', en: 'Failed to copy the link' }
+    linkCopyFailedToast: { ja: 'コピーに失敗しました', en: 'Failed to copy the link' },
+
+    // 🧭 共通ヘッダー・サイドバー・下部ドック（姉妹サイト共通のワーディングに揃えている）
+    navTitle: { ja: '👤 プロフィール', en: '👤 Profile' },
+    sidebarHamburger: { ja: '☰ ツール', en: '☰ Tools' },
+    sidebarRelatedTools: { ja: '🔗 関連ツール', en: '🔗 Related Tools' },
+    sidebarClose: { ja: '×', en: '×' },
+    toolItem: { ja: '🗂️ アイテム所持管理', en: '🗂️ Item Collection' },
+    toolEmote: { ja: '🎭 エモート所持率管理', en: '🎭 Emote Collection' },
+    toolShare: { ja: '📌 創作物管理ツール', en: '📌 Creation Manager' },
+    toolNomacan: { ja: '🕯️ ノマキャン計算機', en: '🕯️ Nomacan Calculator' },
+    toolStarCandle: { ja: '🕯️ 星のキャンドル計算機', en: '🕯️ Star Candle Calculator' },
+    toolCompanion: { ja: '✨ 精霊同行ツール', en: '✨ Spirit Companion Tool' },
+    toolWings: { ja: '🪽 羽トラッカー', en: '🪽 Wing Tracker' },
+    toolDataTransfer: { ja: '🔄 データ引継ぎ', en: '🔄 Data Transfer' },
+    toolProfile: { ja: '👤 作者プロフィール（現在地）', en: '👤 Creator Profile (Current)' },
+    toolInfo: { ja: '⚙️ 設定・更新情報', en: '⚙️ Settings & Updates' },
+    dockProfile: { ja: 'プロフィール', en: 'Profile' },
+    dockDashboard: { ja: 'ダッシュボード', en: 'Dashboard' },
+    dockOtherTools: { ja: '他のツール', en: 'Other Tools' },
+    dockSettings: { ja: '表示設定', en: 'Display' }
   };
 
   // key に対応する訳文を返す。{name} 形式のプレースホルダーは vars で置換する
@@ -1541,6 +1800,9 @@
     // ショートカットが押された場合。ここでガードしないとsettingsPrevFocusElが
     // モーダル内の要素で上書きされてしまい、閉じたときにフォーカスの戻し先を見失う）
     if (document.getElementById('settingsModalOverlay').classList.contains('open')) return;
+    // 🧭 モバイル版「他のツール」ドロワーが開いたままだと2つのオーバーレイが重なってしまうため、
+    // 表示設定モーダルを開く前に閉じておく（closeSidebarMobile()は未オープン時は何もしない安全な関数）
+    closeSidebarMobile();
     syncSettingsUI();
     settingsPrevFocusEl = document.activeElement;
     document.getElementById('settingsModalOverlay').classList.add('open');
@@ -1559,11 +1821,56 @@
     settingsPrevFocusEl = null;
   }
 
-  // ⌨️ Escキーで、開いていれば表示設定モーダルを閉じる（このリポジトリには
-  // モーダルがこれ1つしかないため、単純にこのモーダルの開閉状態だけを見ればよい）。
+  /* ================================================================
+     🧭 ヘッダー／下部ドック共通：モバイル版「他のツール」ドロワーの開閉
+     850px未満（サイドバーが常設表示に切り替わらない幅）でのみ意味を持つ
+     フルスクリーンオーバーレイ。850px以上ではサイドバーが常時表示されるため、
+     ドック側の「他のツール」ボタンから呼ばれても何もしない（isMobileSidebarLayout()
+     でガード）。
+     ================================================================ */
+  function isMobileSidebarLayout() {
+    return window.matchMedia('(max-width: 849.98px)').matches;
+  }
+  function openSidebarMobile() {
+    if (!isMobileSidebarLayout()) return;
+    // 🧭 表示設定モーダルが開いたままだとオーバーレイ同士が重なってしまうため、
+    // ドロワーを開く前に閉じておく（settingsClose()は未オープン時は何もしない安全な関数）
+    if (document.getElementById('settingsModalOverlay').classList.contains('open')) settingsClose();
+    document.getElementById('sidebar').classList.add('sidebar-open');
+    document.getElementById('sidebarOverlay').classList.add('show');
+  }
+  function closeSidebarMobile() {
+    document.getElementById('sidebar').classList.remove('sidebar-open');
+    document.getElementById('sidebarOverlay').classList.remove('show');
+  }
+
+  /* ================================================================
+     🧭 下部ドックの「プロフィール」「ダッシュボード」ボタン
+     このリポジトリ自体がプロフィールページであり、姉妹サイトのような
+     複数プロフィール切替機能は存在しないため、新機能を作らずに既存の表示へ
+     スクロールで案内する形にしている（「プロフィール」＝名前・自己紹介カード、
+     「ダッシュボード」＝既存のSky Status欄＝JST時計／デイリー・エデンリセット・
+     開催中の季節/日々/再訪のカウントダウン表示）。
+     ================================================================ */
+  function dockGoProfile() {
+    const el = document.getElementById('card');
+    if (el) el.scrollIntoView({ behavior: prefersReducedMotionForScroll() ? 'auto' : 'smooth', block: 'start' });
+  }
+  function dockGoDashboard() {
+    const el = document.getElementById('skyPanelClock');
+    if (el) el.scrollIntoView({ behavior: prefersReducedMotionForScroll() ? 'auto' : 'smooth', block: 'center' });
+  }
+  function prefersReducedMotionForScroll() {
+    try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; }
+  }
+
+  // ⌨️ Escキーで、開いていれば表示設定モーダル→モバイル版「他のツール」ドロワーの順に閉じる
+  // （このリポジトリで同時に開き得るオーバーレイはこの2つだけなので、優先度つきで順に見ればよい）。
   function closeTopmostOpenModal() {
     const overlay = document.getElementById('settingsModalOverlay');
-    if (overlay && overlay.classList.contains('open')) settingsClose();
+    if (overlay && overlay.classList.contains('open')) { settingsClose(); return; }
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar && sidebar.classList.contains('sidebar-open')) { closeSidebarMobile(); return; }
   }
 
   // ⌨️ 全ページ共通のキーボードショートカット（?＝表示設定を開く／d,D＝ダークモード切替／
