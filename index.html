@@ -207,14 +207,11 @@
   .sidebar-toggle-btn:focus-visible { border-color: var(--sky); background: var(--row); }
   @media (min-width: 850px) { .sidebar-toggle-btn { visibility: hidden; } }
 
-  /* ---------- 🧭 メイン領域＋サイドバー（720px/960pxブレークポイント。姉妹サイト共通） ---------- */
+  /* ---------- 🧭 メイン領域＋サイドバー（ドロワー/オーバーレイ。姉妹サイト共通） ---------- */
   .app-layout {
     max-width: 720px;
     margin: 0 auto;
     padding: 0 16px;
-  }
-  @media (min-width: 850px) {
-    .app-layout { max-width: 960px; display: flex; gap: 20px; align-items: flex-start; }
   }
 
   .sidebar-overlay {
@@ -240,7 +237,6 @@
     box-shadow: 0 1px 4px rgba(2, 132, 199, 0.1);
     display: none;
   }
-  @media (min-width: 850px) { .sidebar { display: block; } }
   .sidebar.sidebar-open {
     display: flex !important;
     flex-direction: column;
@@ -1822,17 +1818,11 @@
   }
 
   /* ================================================================
-     🧭 ヘッダー／下部ドック共通：モバイル版「他のツール」ドロワーの開閉
-     850px未満（サイドバーが常設表示に切り替わらない幅）でのみ意味を持つ
-     フルスクリーンオーバーレイ。850px以上ではサイドバーが常時表示されるため、
-     ドック側の「他のツール」ボタンから呼ばれても何もしない（isMobileSidebarLayout()
-     でガード）。
+     🧭 ヘッダー／下部ドック共通：「他のツール」ドロワーの開閉
+     幅を問わず常にフルスクリーンオーバーレイとして開く（関連ツール一覧の
+     常設サイドバーは廃止済みのため、ここが唯一の表示経路）。
      ================================================================ */
-  function isMobileSidebarLayout() {
-    return window.matchMedia('(max-width: 849.98px)').matches;
-  }
   function openSidebarMobile() {
-    if (!isMobileSidebarLayout()) return;
     // 🧭 表示設定モーダルが開いたままだとオーバーレイ同士が重なってしまうため、
     // ドロワーを開く前に閉じておく（settingsClose()は未オープン時は何もしない安全な関数）
     if (document.getElementById('settingsModalOverlay').classList.contains('open')) settingsClose();
