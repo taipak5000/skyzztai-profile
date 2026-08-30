@@ -215,6 +215,35 @@
   }
   @media (min-width: 850px) { .app-layout { max-width: 960px; } }
 
+  /* ---------- 💡 初回訪問ヒントバナー（ヘッダー直下・一度だけ表示） ---------- */
+  .hint-banner {
+    width: min(600px, calc(100% - 32px));
+    margin: 10px auto 0;
+    background: var(--panel);
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    padding: 9px 12px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.5;
+  }
+  .hint-banner-text { flex: 1; min-width: 0; }
+  .hint-banner-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    line-height: 1;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0 2px;
+    flex-shrink: 0;
+    font-family: inherit;
+  }
+  .hint-banner-close:hover { color: var(--text); }
+
   .sidebar-overlay {
     display: none;
     position: fixed;
@@ -1602,7 +1631,10 @@
     dockDashboard: { ja: 'ダッシュボード', en: 'Dashboard' },
     dockOtherTools: { ja: '他のツール', en: 'Other Tools' },
     dockSettings: { ja: '表示設定', en: 'Display' },
-    quickMenuAriaLabel: { ja: 'クイックメニュー', en: 'Quick menu' }
+    quickMenuAriaLabel: { ja: 'クイックメニュー', en: 'Quick menu' },
+
+    // 💡 初回訪問ヒントバナー
+    firstVisitHintText: { ja: '💡 姉妹サイトでは 🗂️ プロフィール切替で複数の保存枠を使い分けたり、🔄 データ引継ぎでクラウド不要のまま別端末にデータを移したりできます。', en: '💡 On the sibling tools, you can 🗂️ switch between multiple save-slot profiles, and use 🔄 Data Transfer to move your data to another device — no cloud account needed.' }
   };
 
   // key に対応する訳文を返す。{name} 形式のプレースホルダーは vars で置換する
@@ -1677,6 +1709,48 @@
     renderSkyActive();
     renderShardBadge();
     syncSettingsUI();
+  }
+
+  /* ================================================================
+     💡 初回訪問ヒントバナー
+     共有リンクなどからこのサイトへ初めて訪れた方は、姉妹サイト側にある
+     プロフィール切替（複数の保存枠）や、データ引継ぎ（クラウド不要で
+     別端末にデータを移せる機能）の存在に気付きにくいため、一度だけ
+     簡単に紹介する。フラグは'sky_app_lang'等と同様、このリポジトリの
+     セーブ枠に依存しないグローバルなlocalStorageキーとして扱う。
+     ただし姉妹サイト「アイテム所持管理」に実装済みの同名フラグ
+     （sky_first_visit_hint_shown_v1・値'1'）とキー名・値を完全に一致させて
+     おり、どちらか一方で一度でも閉じれば、もう片方でも表示されなくなる
+     （＝「エコシステム全体で一度だけ」という挙動を、専用の同期処理なしで
+     単に同じキーを読み書きするだけで実現している）。
+     ================================================================ */
+  const FIRST_VISIT_HINT_KEY = 'sky_first_visit_hint_shown_v1';
+
+  function isFirstVisitHintShown() {
+    try { return localStorage.getItem(FIRST_VISIT_HINT_KEY) === '1'; }
+    catch (e) { return true; } // localStorageに書けない環境では、二度と消せないバナーを出し続けないよう表示自体を諦める
+  }
+  function markFirstVisitHintShown() {
+    try { localStorage.setItem(FIRST_VISIT_HINT_KEY, '1'); } catch (e) { /* プライベートブラウジング等 */ }
+  }
+  function dismissFirstVisitHint() {
+    markFirstVisitHintShown();
+    const el = document.getElementById('firstVisitHintBanner');
+    if (el) el.remove();
+  }
+  // ヘッダー（.site-nav）の直後にバナーを差し込む。既に一度でも表示済み（＝フラグが
+  // 立っている）場合は何もしない＝二度と生成されないため確実に「初回のみ」となる。
+  function renderFirstVisitHint(afterEl) {
+    if (isFirstVisitHintShown() || !afterEl) return;
+    const hint = document.createElement('div');
+    hint.className = 'hint-banner';
+    hint.id = 'firstVisitHintBanner';
+    hint.setAttribute('role', 'note');
+    hint.innerHTML = `
+      <span class="hint-banner-text" data-i18n="firstVisitHintText"></span>
+      <button type="button" class="hint-banner-close" onclick="dismissFirstVisitHint()" aria-label="Close" data-i18n-aria-label="closeButton">×</button>`;
+    afterEl.insertAdjacentElement('afterend', hint);
+    applyI18n(); // 差し込んだ直後の要素にも即座に訳文を反映する（言語切替時もapplyI18n()経由で追従する）
   }
 
   /* ================================================================
@@ -2115,6 +2189,7 @@
   renderProfile();
   renderLinks();
   setupAvatarEasterEgg();
+  renderFirstVisitHint(document.querySelector('.site-nav'));
 
   /* ================================================================
      ⏰ Sky Status：日本時間の時計・デイリー/エデンリセットカウントダウン
