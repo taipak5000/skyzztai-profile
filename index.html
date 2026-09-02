@@ -1166,9 +1166,9 @@
 
 <div class="app-layout">
 
-  <aside class="sidebar" id="sidebar">
+  <aside class="sidebar" id="sidebar" role="dialog" aria-modal="true" aria-labelledby="sidebarTitleText" tabindex="-1">
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-      <span class="sidebar-section-label" style="margin-bottom:0;" data-i18n="sidebarRelatedTools">関連ツール</span>
+      <span class="sidebar-section-label" id="sidebarTitleText" style="margin-bottom:0;" data-i18n="sidebarRelatedTools">関連ツール</span>
       <button type="button" class="sidebar-close-btn" onclick="closeSidebarMobile()" aria-label="Close" data-i18n="sidebarClose" data-i18n-aria-label="closeButton">×</button>
     </div>
     <nav aria-label="関連ツール" data-i18n-aria-label="relatedToolsAriaLabel">
@@ -1915,17 +1915,65 @@
      🧭 ヘッダー／下部ドック共通：「他のツール」ドロワーの開閉
      幅を問わず常にフルスクリーンオーバーレイとして開く（関連ツール一覧の
      常設サイドバーは廃止済みのため、ここが唯一の表示経路）。
+     表示設定モーダル（settingsOpen/settingsClose/settingsTrapKeydown）と同様、
+     開いている間はTabキーをドロワー内に閉じ込め、閉じたときは開く前に
+     フォーカスしていた要素（トリガー）に戻す。
      ================================================================ */
+  let sidebarPrevFocusEl = null;
+
+  // ドロワー内でTab移動の対象になる要素（表示されているものだけ）を取得する
+  function sidebarFocusableEls() {
+    const aside = document.getElementById('sidebar');
+    const all = aside.querySelectorAll(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+    return Array.prototype.filter.call(all, function (el) { return el.offsetParent !== null; });
+  }
+
+  // Tabキーがドロワーの外（＝背後のページ）に出ていかないよう、最初/最後の要素で折り返す
+  function sidebarTrapKeydown(e) {
+    if (e.key !== 'Tab') return;
+    const focusable = sidebarFocusableEls();
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey) {
+      if (document.activeElement === first || !document.getElementById('sidebar').contains(document.activeElement)) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else {
+      if (document.activeElement === last || !document.getElementById('sidebar').contains(document.activeElement)) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  }
+
   function openSidebarMobile() {
+    // 既に開いている場合は何もしない（ここでガードしないとsidebarPrevFocusElが
+    // ドロワー内の要素で上書きされてしまい、閉じたときにフォーカスの戻し先を見失う）
+    if (document.getElementById('sidebar').classList.contains('sidebar-open')) return;
     // 🧭 表示設定モーダルが開いたままだとオーバーレイ同士が重なってしまうため、
     // ドロワーを開く前に閉じておく（settingsClose()は未オープン時は何もしない安全な関数）
     if (document.getElementById('settingsModalOverlay').classList.contains('open')) settingsClose();
+    sidebarPrevFocusEl = document.activeElement;
     document.getElementById('sidebar').classList.add('sidebar-open');
     document.getElementById('sidebarOverlay').classList.add('show');
+    // フォーカスをドロワー内に移す（最初の操作可能な要素へ。無ければドロワー自体へ）
+    const focusable = sidebarFocusableEls();
+    (focusable[0] || document.getElementById('sidebar')).focus();
+    document.addEventListener('keydown', sidebarTrapKeydown, true);
   }
   function closeSidebarMobile() {
     document.getElementById('sidebar').classList.remove('sidebar-open');
     document.getElementById('sidebarOverlay').classList.remove('show');
+    document.removeEventListener('keydown', sidebarTrapKeydown, true);
+    // フォーカスを開く前の要素（トリガー）に戻す
+    if (sidebarPrevFocusEl && typeof sidebarPrevFocusEl.focus === 'function') {
+      sidebarPrevFocusEl.focus();
+    }
+    sidebarPrevFocusEl = null;
   }
 
   /* ================================================================
@@ -2499,6 +2547,25 @@
     };
   }
 
+  // PTでの「年月日＋その日の0:00からの経過秒」を、実際のUTC時刻（Dateオブジェクト）に変換する。
+  // 単純に基準となるDateへ「対象の経過秒 - 現在の経過秒」を足すだけだと、対象日がPTの夏時間切替日を
+  // またぐ場合に1時間分ズレてしまう（切替日はPTの1日が23時間/25時間になるため）。そのため、対象の
+  // PTウォールクロックを一度UTCとみなした仮の時刻を作り、その瞬間の実際のPTオフセットで補正し直す
+  // ことでズレを避ける（2回繰り返すことで、切替の瞬間をまたぐ最初の仮時刻のズレも解消する）。
+  function ptDateFromSecOfDay(y, mo, d, secOfDay) {
+    const h = Math.floor(secOfDay / 3600);
+    const mi = Math.floor((secOfDay % 3600) / 60);
+    const s = Math.floor(secOfDay % 60);
+    const target = Date.UTC(y, mo - 1, d, h, mi, s);
+    let guess = target;
+    for (let i = 0; i < 2; i++) {
+      const zp = getZoneParts(PT_ZONE, new Date(guess));
+      const zpAsUtc = Date.UTC(Number(zp.y), Number(zp.mo) - 1, Number(zp.d), zp.h, zp.mi, zp.s);
+      guess += target - zpAsUtc;
+    }
+    return new Date(guess);
+  }
+
   // 現在の状況（今まさに出現中 or 次はいつ・何色・どこか）を、開始・終了の絶対時刻つきで求める
   function findShardStatus() {
     const now = new Date();
@@ -2511,8 +2578,8 @@
         const startSec = today.offsetSec + i * today.intervalSec;
         const endSec = startSec + SHARD_DURATION_SEC;
         if (secOfDayNow < endSec) {
-          const start = new Date(now.getTime() + (startSec - secOfDayNow) * 1000);
-          const end = new Date(now.getTime() + (endSec - secOfDayNow) * 1000);
+          const start = ptDateFromSecOfDay(Number(pt.y), Number(pt.mo), Number(pt.d), startSec);
+          const end = new Date(start.getTime() + SHARD_DURATION_SEC * 1000);
           return { active: secOfDayNow >= startSec, color: today.color, place: today.place, placeEn: today.placeEn, realmIdx: today.realmIdx, start, end };
         }
       }
@@ -2523,10 +2590,8 @@
       const fpt = getZoneParts(PT_ZONE, future);
       const info = computeShardForDay(Number(fpt.d), SHARD_WD_ISO[fpt.weekday]);
       if (info.hasShardToday) {
-        const startSec = dayAhead * 86400 + info.offsetSec;
-        const endSec = startSec + SHARD_DURATION_SEC;
-        const start = new Date(now.getTime() + (startSec - secOfDayNow) * 1000);
-        const end = new Date(now.getTime() + (endSec - secOfDayNow) * 1000);
+        const start = ptDateFromSecOfDay(Number(fpt.y), Number(fpt.mo), Number(fpt.d), info.offsetSec);
+        const end = new Date(start.getTime() + SHARD_DURATION_SEC * 1000);
         return { active: false, color: info.color, place: info.place, placeEn: info.placeEn, realmIdx: info.realmIdx, start, end };
       }
     }
