@@ -1776,9 +1776,6 @@
     if (stored === 'light' || stored === 'dark') return stored;
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   }
-  function isDarkModeOn() {
-    return document.documentElement.getAttribute('data-theme') === 'dark';
-  }
   function applyThemeToDOM(isDark) {
     document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
     const meta = document.getElementById('themeColorMeta');
