@@ -2722,7 +2722,9 @@
     const today = computeShardForDay(Number(pt.d), SHARD_WD_ISO[pt.weekday]);
 
     if (today.hasShardToday) {
-      for (let i = 0; i < 3; i++) {
+      // 1日の中で実際に開始し得る回数はconfigのintervalSecによって異なる（黒=3回、赤=configにより3〜4回）ため、
+      // 固定回数ではなく「開始時刻がその日(24h)に収まるか」で動的に判定する
+      for (let i = 0; today.offsetSec + i * today.intervalSec < 86400; i++) {
         const startSec = today.offsetSec + i * today.intervalSec;
         const endSec = startSec + SHARD_DURATION_SEC;
         if (secOfDayNow < endSec) {
