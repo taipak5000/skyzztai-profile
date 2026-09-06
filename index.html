@@ -936,6 +936,9 @@
     font-variant-numeric: tabular-nums; white-space: nowrap;
   }
   .sky-reset-val.soon { color: #B45309; }
+  /* 🔢 数字と単位のコントラスト：数字はそのまま強く、直後の単位文字だけ弱めて
+     数字が主役に見えるようにする（例: 「3日12時」の「日」「時」側） */
+  .sky-unit { font-weight: 500; opacity: 0.72; }
 
   .sky-active-item {
     display: flex; align-items: flex-start; gap: 6px;
@@ -970,6 +973,7 @@
     color: rgba(15, 23, 42, 0.62);
     font-size: 12px;
     letter-spacing: 0.02em;
+    line-height: 1.5;
     margin: 28px 0 0;
   }
 
@@ -1425,7 +1429,7 @@
     </section>
   </main>
 
-  <p class="footnote" style="margin-top:6px;" data-i18n="unofficialDisclaimer">このサイトはSky 星を紡ぐ子どもたちの非公式ファンサイトです。thatgamecompanyは一切関与していません。</p>
+  <p class="footnote" style="margin-top:6px; text-align:left;" data-i18n="unofficialDisclaimer">このサイトはSky 星を紡ぐ子どもたちの非公式ファンサイトです。thatgamecompanyは一切関与していません。</p>
   <p class="footnote" id="footnote"></p>
   <p class="footnote" style="margin-top:6px;"><a href="https://taipak5000.github.io/tai-info/" style="color:inherit; text-decoration:underline; text-underline-offset:2px;" data-i18n="settingsLink">設定・更新情報・クレジット・プライバシーポリシー</a></p>
 </div><!-- /.stage -->
@@ -2442,7 +2446,11 @@
     const edenSecLeft = (daysLeft === 0 ? 7 * 86400 : daysLeft * 86400) - secOfDay;
     const ed = Math.floor(edenSecLeft / 86400), eh = Math.floor((edenSecLeft % 86400) / 3600), em = Math.floor((edenSecLeft % 3600) / 60);
     const edenEl = document.getElementById('skyEdenCountdown');
-    edenEl.textContent = ed > 0 ? t('edenDaysHours', { d: ed, h: pad2(eh) }) : `${pad2(eh)}:${pad2(em)}:${pad2(edenSecLeft % 60)}`;
+    if (ed > 0) {
+      edenEl.innerHTML = highlightNumberUnit(t('edenDaysHours', { d: ed, h: pad2(eh) }));
+    } else {
+      edenEl.textContent = `${pad2(eh)}:${pad2(em)}:${pad2(edenSecLeft % 60)}`;
+    }
     edenEl.classList.toggle('soon', edenSecLeft <= 3600 * 6);
     document.getElementById('skyEdenResetMini').title = t('edenResetTooltip', { hour: rh });
   }
@@ -2475,6 +2483,14 @@
   }
   function escapeSkyHtml(s) {
     return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  // 🔢 数字とその直後の単位（日・時間・分・秒 や d/h/m/s 等）を分けて表示するため、
+  // 数字に続く単位文字だけを<span class="sky-unit">で包んで弱める（数字自体は無加工のまま）。
+  // 呼び出す文字列は数字と単位以外に記号を含まない前提のため、ここでは値をエスケープしていない。
+  // ここで組んだHTMLはinnerHTMLとして挿入する箇所専用（title属性等の生テキストには使わないこと）。
+  function highlightNumberUnit(str) {
+    return String(str).replace(/(\d+)([^\d\s]+)/g, '$1<span class="sky-unit">$2</span>');
   }
 
   // 配列の中から「現在開催中のもの」と「一番近い今後の予定」を探す
@@ -2514,12 +2530,12 @@
     if (info.active) {
       entry = info.active;
       const remain = fmtSkyRemain(entry.end - now);
-      text = phrasing ? phrasing.now(remain) : t('endsIn', { remain });
+      text = highlightNumberUnit(phrasing ? phrasing.now(remain) : t('endsIn', { remain }));
       stateClass = 'is-now';
     } else if (info.next) {
       entry = info.next;
       const remain = fmtSkyRemain(entry.start - now);
-      text = phrasing ? phrasing.next(remain) : t('startsIn', { remain });
+      text = highlightNumberUnit(phrasing ? phrasing.next(remain) : t('startsIn', { remain }));
       stateClass = 'is-future';
     } else {
       return `
