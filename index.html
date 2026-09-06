@@ -770,6 +770,11 @@
   .link-row:nth-of-type(4n+3) .link-icon { background: linear-gradient(145deg, var(--indigo), #4F46E5); }
   .link-row:nth-of-type(4n+4) .link-icon { background: linear-gradient(145deg, var(--sky-bright), #0369A1); }
 
+  /* .inline-icon自体がstroke/colorをvar(--sky)に固定しているため、このままだと
+     4色ローテーションする.link-iconの背景と同化してしまう(特に1つ目のvar(--sky)背景)。
+     バッジの上では常に白で描画し、どの背景色でも視認できるようにする */
+  .link-icon .inline-icon { stroke: #fff; color: #fff; }
+
   .link-row:hover .link-icon,
   .link-row:focus-visible .link-icon { animation: icon-wiggle 0.5s ease; }
 
