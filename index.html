@@ -2700,18 +2700,33 @@
   // またぐ場合に1時間分ズレてしまう（切替日はPTの1日が23時間/25時間になるため）。そのため、対象の
   // PTウォールクロックを一度UTCとみなした仮の時刻を作り、その瞬間の実際のPTオフセットで補正し直す
   // ことでズレを避ける（2回繰り返すことで、切替の瞬間をまたぐ最初の仮時刻のズレも解消する）。
+  // 例外は「春の時計繰り上げ（spring forward）」当日のPTウォールクロック2:00-2:59台で、この帯の
+  // 時刻はその日実在しないため2回の補正では存在しない時刻に向かって発振し、一致しないまま終わる。
+  // そのため各補正候補を実際にPTへ変換し直して対象と一致するか確認し、一致するものがあればそれを
+  // 採用、どれも一致しなければ（＝実在しない時刻）候補のうち最も遅い時刻（＝繰り上げ後の実在時刻と
+  // して解釈したもの）を採用する。
   function ptDateFromSecOfDay(y, mo, d, secOfDay) {
     const h = Math.floor(secOfDay / 3600);
     const mi = Math.floor((secOfDay % 3600) / 60);
     const s = Math.floor(secOfDay % 60);
     const target = Date.UTC(y, mo - 1, d, h, mi, s);
+    const matchesTarget = t => {
+      const zp = getZoneParts(PT_ZONE, new Date(t));
+      return Number(zp.y) === y && Number(zp.mo) === mo && Number(zp.d) === d &&
+        zp.h === h && zp.mi === mi && zp.s === s;
+    };
     let guess = target;
+    const guesses = [guess];
     for (let i = 0; i < 2; i++) {
       const zp = getZoneParts(PT_ZONE, new Date(guess));
       const zpAsUtc = Date.UTC(Number(zp.y), Number(zp.mo) - 1, Number(zp.d), zp.h, zp.mi, zp.s);
       guess += target - zpAsUtc;
+      guesses.push(guess);
     }
-    return new Date(guess);
+    for (const g of guesses) {
+      if (matchesTarget(g)) return new Date(g);
+    }
+    return new Date(Math.max.apply(null, guesses));
   }
 
   // 現在の状況（今まさに出現中 or 次はいつ・何色・どこか）を、開始・終了の絶対時刻つきで求める
