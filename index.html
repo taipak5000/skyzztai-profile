@@ -119,6 +119,9 @@
   .inline-icon { stroke: var(--sky); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; vertical-align: -3px; color: var(--sky); }
   .inline-icon.warn { stroke: #FF3B30; color: #FF3B30; }
   .inline-icon.ok { stroke: #34C759; color: #34C759; }
+  /* ダークモードの水色（--sky）はグロー背景の色調と近く埋もれて見づらいため、
+     サイドバー「他のツール」一覧のアイコンだけは視認性を優先して白にする */
+  [data-theme="dark"] .sidebar-nav-link .inline-icon { stroke: #fff; color: #fff; }
   .icon-chip {
     display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
     background: var(--sky-bg);
