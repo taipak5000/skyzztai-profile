@@ -2735,8 +2735,12 @@
       }
     }
     // 今日はもう終わった（or 今日は発生しない）→ 最大7日先まで探す
+    // ※ now.getTime()に24h*dayAheadを足す方式だと、PTの夏時間切替日（23時間/25時間）をまたぐ際に
+    //   実時間の24hがPTのカレンダー日を1日飛ばしてしまうことがある。そこで「PTの年月日」に対して
+    //   カレンダー上でdayAhead日を加算し、それをUTC正午とみなして日付を再取得する（PTのオフセットは
+    //   UTC-7〜-8なので正午UTCは必ず同じPT暦日の午前になり、DSTの影響を受けない）。
     for (let dayAhead = 1; dayAhead <= 7; dayAhead++) {
-      const future = new Date(now.getTime() + dayAhead * 86400000);
+      const future = new Date(Date.UTC(Number(pt.y), Number(pt.mo) - 1, Number(pt.d) + dayAhead, 12, 0, 0));
       const fpt = getZoneParts(PT_ZONE, future);
       const info = computeShardForDay(Number(fpt.d), SHARD_WD_ISO[fpt.weekday]);
       if (info.hasShardToday) {
