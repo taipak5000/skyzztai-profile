@@ -150,10 +150,6 @@
   [data-theme="dark"] .card {
     box-shadow: 0 1px 4px rgba(0,0,0,0.07), 0 0.5px 1px rgba(0,0,0,0.04);
   }
-  [data-theme="dark"] .sky-panel {
-    background: linear-gradient(160deg, rgba(56,189,248,0.12), rgba(19,30,48,0.92));
-  }
-  [data-theme="dark"] .sky-reset-val.soon { color: #FBBF24; }
   [data-theme="dark"] .footnote { color: rgba(148, 163, 184, 0.8); }
 
   * { box-sizing: border-box; }
@@ -814,20 +810,11 @@
     color: var(--sky-bright);
   }
 
-  /* ---------- Sky Status（アバター下のコンパクトパネル。PC/モバイル共通） ---------- */
   .avatar-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto;
-    align-items: center;
+    display: flex;
     justify-content: center;
-    gap: 10px;
-    max-width: 320px;
     margin: 0 auto 18px;
   }
-  .avatar-row .avatar-wrap { grid-column: 1 / 3; grid-row: 1; margin: 0 auto; justify-self: center; }
-  .sky-panel-left { grid-column: 1; grid-row: 2; }
-  .sky-panel-right { grid-column: 2; grid-row: 2; }
 
   /* ---------- 闇の破片バッジ（アバターの右下に付く小さなピル） ---------- */
   .shard-badge {
@@ -862,8 +849,7 @@
   /* ---------- タップで開く簡易ツールチップ（title属性の内容をそのまま表示） ---------- */
   /* PCはtitle属性のホバーで、スマホ等タップ操作の環境はこのクラスをタップで
      付け外しすることで、どちらでも同じ内容を確認できるようにする。 */
-  .shard-badge.tap-open::after,
-  .sky-reset-mini.tap-open::after {
+  .shard-badge.tap-open::after {
     content: attr(title);
     position: absolute;
     top: 100%;
@@ -882,84 +868,32 @@
     box-shadow: 0 8px 20px -8px rgba(0,0,0,0.6);
     z-index: 50;
     pointer-events: none;
+    right: 0;
   }
-  .shard-badge.tap-open::after { right: 0; }
-  .sky-reset-mini { position: relative; }
-  .sky-reset-mini.tap-open::after { left: 0; }
 
-  .sky-panel {
-    width: 100%;
-    box-sizing: border-box;
-    text-align: left;
-    background: linear-gradient(160deg, rgba(2,132,199,0.10), rgba(255,255,255,0.92));
-    border: 1px solid var(--border-strong);
-    border-radius: 14px;
-    padding: 10px 12px;
-    box-shadow: 0 10px 22px -14px rgba(56,189,248,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
-  }
-  .sky-panel-label {
-    display: flex; align-items: center; gap: 5px;
-    font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--sky-bright); margin-bottom: 6px;
-  }
-  .sky-live-dot {
-    width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
-    background: var(--teal); box-shadow: 0 0 6px 1px rgba(45,212,191,0.85);
-    animation: sky-pulse 1.6s ease-in-out infinite;
-  }
   @keyframes sky-pulse {
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.35; transform: scale(0.7); }
   }
 
-  .sky-clock-time {
-    font-size: 18px; font-weight: 700; color: var(--text);
-    font-variant-numeric: tabular-nums; letter-spacing: 0.02em;
-  }
-  .sky-clock-sub { font-size: 10.5px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; }
-
-  .sky-reset-mini {
-    display: flex; align-items: center; gap: 6px;
-    margin-top: 6px; cursor: help;
-  }
-  .sky-reset-icon { font-size: 12px; flex-shrink: 0; }
-  .sky-reset-text { min-width: 0; }
-  .sky-reset-label-mini { font-size: 9.5px; color: var(--text-muted); line-height: 1.25; white-space: nowrap; }
-  .sky-reset-val {
-    font-size: 11px; color: var(--text); font-weight: 700; line-height: 1.25;
-    font-variant-numeric: tabular-nums; white-space: nowrap;
-  }
-  .sky-reset-val.soon { color: #B45309; }
-  /* 🔢 数字と単位のコントラスト：数字はそのまま強く、直後の単位文字だけ弱めて
-     数字が主役に見えるようにする（例: 「3日12時」の「日」「時」側） */
-  .sky-unit { font-weight: 500; opacity: 0.72; }
-
-  .sky-active-item {
-    display: flex; align-items: flex-start; gap: 6px;
-    padding: 5px 0; border-top: 1px dashed var(--border);
-  }
-  .sky-active-item:first-child { border-top: none; padding-top: 0; }
-  .sky-active-item.sky-active-toggle { cursor: pointer; }
-  .sky-active-icon { font-size: 13px; flex-shrink: 0; line-height: 1.3; }
-  .sky-active-text { min-width: 0; flex: 1; }
-  .sky-active-name {
-    font-size: 11px; font-weight: 700; color: var(--text); line-height: 1.3;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-  }
-  .sky-active-expand-hint {
-    display: inline-block; margin-left: 4px; font-size: 9px; color: var(--sky);
-    transition: transform 0.2s ease;
-  }
-  .sky-active-item.is-expanded .sky-active-expand-hint { transform: rotate(90deg); }
-  .sky-active-remain { font-size: 9.5px; font-weight: 700; margin-top: 1px; }
-  .sky-active-remain.is-now { color: var(--teal); }
-  .sky-active-remain.is-future { color: var(--sky-bright); }
-  .sky-active-remain.sky-active-none { color: var(--text-muted); font-weight: 500; }
-  .sky-active-detail {
-    display: none; margin-top: 5px; font-size: 10.5px; line-height: 1.6; color: var(--text-muted);
-    padding: 6px 9px; background: var(--panel-alt); border-radius: 6px; border-left: 2px solid var(--border-strong);
-  }
-  .sky-active-item.is-expanded .sky-active-detail { display: block; }
+  /* ---------- ダッシュボード（今日・今週・今月）。他の姉妹サイトの.dash-row等と
+     同じ大きさ・余白に揃えている（padding 9px 11px・角丸10px・文字13px）。 ---------- */
+  .dash-section { margin-top: 16px; }
+  .dash-section:first-child { margin-top: 0; }
+  .dash-section-label { font-size: 12px; font-weight: 700; color: var(--text-muted); margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .dash-row { display: flex; align-items: flex-start; gap: 8px; padding: 9px 11px; background: var(--row); border-radius: 10px; margin-bottom: 6px; font-size: 13px; color: var(--text); line-height: 1.5; }
+  .dash-row:last-child { margin-bottom: 0; }
+  .dash-row-icon { flex-shrink: 0; }
+  .dash-row-text { flex: 1; min-width: 0; }
+  .dash-row b { color: var(--sky); }
+  .dash-countdown { display: block; margin-top: 3px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--sky); }
+  .dash-note { display: block; margin-top: 2px; font-size: 11.5px; font-weight: 400; color: var(--text-muted); }
+  .dash-shard-times { display: block; margin-top: 3px; }
+  .dash-shard-time { color: var(--sky); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .dash-shard-time.past { color: var(--text-muted); font-weight: 400; text-decoration: line-through; }
+  .dash-empty { font-size: 12.5px; color: var(--text-muted); padding: 2px 2px 4px; }
+  .dash-count-num { font-size: 1.1em; }
+  .dash-count-unit { font-weight: 500; opacity: 0.75; font-size: 0.85em; margin-right: 3px; }
 
   /* ---------- フッター ---------- */
   .footnote {
@@ -1302,7 +1236,7 @@
   自己紹介ホームページ
   ----------------------------------------------------------------
   編集していただくのは、ページ下部の script タグの中にある
-  「profile」「links」「skySchedule」の3つだけで大丈夫です。
+  「profile」「links」の2つだけで大丈夫です。
   それより上のHTML/CSSは基本的に触らなくてもそのまま使えます。
   ================================================================
 -->
@@ -1352,30 +1286,6 @@
 
     <div class="profile">
       <div class="avatar-row">
-        <div class="sky-panel sky-panel-left" id="skyPanelClock">
-          <div class="sky-panel-label"><span class="sky-live-dot"></span>JST</div>
-          <div class="sky-clock-time" id="skyJstClock">--:--:--</div>
-          <div class="sky-clock-sub" id="skyClockSub">ゲーム内時間 --:--</div>
-          <div class="sky-reset-mini" id="skyDailyResetMini" role="button" tabindex="0"
-            onclick="this.classList.toggle('tap-open')"
-            onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.classList.toggle('tap-open');}">
-            <span class="sky-reset-icon"><svg class="inline-icon" width="18" height="18"><use href="#i-sun"/></svg></span>
-            <div class="sky-reset-text">
-              <div class="sky-reset-label-mini" data-i18n="dailyRemainLabel">デイリー残り</div>
-              <div class="sky-reset-val" id="skyDailyCountdown">--:--:--</div>
-            </div>
-          </div>
-          <div class="sky-reset-mini" id="skyEdenResetMini" role="button" tabindex="0"
-            onclick="this.classList.toggle('tap-open')"
-            onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.classList.toggle('tap-open');}">
-            <span class="sky-reset-icon"><svg class="inline-icon" width="18" height="18"><use href="#i-bolt"/></svg></span>
-            <div class="sky-reset-text">
-              <div class="sky-reset-label-mini" data-i18n="edenResetLabel">原罪リセットまで</div>
-              <div class="sky-reset-val" id="skyEdenCountdown">--</div>
-            </div>
-          </div>
-        </div>
-
         <div class="avatar-wrap" id="avatar-wrap" role="button" tabindex="0" title="タップしてみてね" data-i18n-title="tapMe">
           <div class="avatar" id="avatar"></div>
           <div class="shard-badge" id="shardBadge" role="button" tabindex="0"
@@ -1384,11 +1294,6 @@
             <span class="shard-dot" id="shardDot"></span>
             <span class="shard-realm" id="shardRealmText">--</span>
           </div>
-        </div>
-
-        <div class="sky-panel sky-panel-right" id="skyPanelNow">
-          <div class="sky-panel-label"><span class="sky-live-dot" id="skyNowDot"></span>NOW</div>
-          <div id="skyActiveList"><!-- JS --></div>
         </div>
       </div>
       <h1 class="name" id="profile-name"></h1>
@@ -1436,7 +1341,7 @@
     <span class="site-dock-icon"><span class="icon-chip" style="width:28px; height:28px;"><svg width="22" height="22"><use href="#i-person"/></svg></span></span>
     <span class="site-dock-label" data-i18n="dockProfile">プロフィール</span>
   </button>
-  <button type="button" onclick="dockGoDashboard()">
+  <button type="button" onclick="pfDashOpen()">
     <span class="site-dock-icon"><span class="icon-chip" style="width:28px; height:28px;"><svg width="22" height="22"><use href="#i-calendar"/></svg></span></span>
     <span class="site-dock-label" data-i18n="dockDashboard">ダッシュボード</span>
   </button>
@@ -1488,6 +1393,40 @@
     </div>
 
     <button type="button" class="settings-close-btn" onclick="settingsClose()" data-i18n="closeButton">閉じる</button>
+  </div>
+</div>
+
+<!-- 📅 ダッシュボード（今日・今週・今月）。表示設定と同じボトムシート機構
+     （.settings-modal-overlay/.settings-modal-card）をそのまま流用し、
+     他の姉妹サイトと同じ大きさ・見た目の情報を表示する。 -->
+<div class="settings-modal-overlay" id="dashModalOverlay" onclick="if(event.target===this) pfDashClose()">
+  <div class="settings-modal-card" id="dashModalCard" role="dialog" aria-modal="true" aria-labelledby="dashModalTitleText" tabindex="-1">
+    <h3>
+      <span id="dashModalTitleText"><svg class="inline-icon" width="18" height="18"><use href="#i-calendar"/></svg> <span data-i18n="dashTitle">今日・今週・今月</span></span>
+      <button type="button" class="settings-close-x" onclick="pfDashClose()" aria-label="Close" data-i18n-aria-label="closeButton"><span class="icon-chip" style="width:22px; height:22px;"><svg width="16" height="16"><use href="#i-close"/></svg></span></button>
+    </h3>
+    <div id="dashBody"><p class="dash-empty" data-i18n="dashLoading">読み込み中…</p></div>
+    <div class="dash-section">
+      <p class="dash-section-label"><svg class="inline-icon" width="15" height="15"><use href="#i-bell"/></svg> <span data-i18n="dashReminderSection">通知リマインダー</span></p>
+      <div class="dash-row" style="align-items:center;">
+        <span class="dash-row-icon icon-chip" style="width:22px; height:22px;"><svg width="17" height="17"><use href="#i-bell"/></svg></span>
+        <span class="dash-row-text" data-i18n="dashReminderCheckboxLabel">季節・イベントの終了やリセットが近づいたら通知する</span>
+        <input type="checkbox" id="dashReminderCheckbox" style="width:19px; height:19px; flex-shrink:0; cursor:pointer;" onchange="pfReminderToggle(this.checked)">
+      </div>
+      <div class="dash-row" style="align-items:center;">
+        <span class="dash-row-icon icon-chip" style="width:22px; height:22px;"><svg width="17" height="17"><use href="#i-clock"/></svg></span>
+        <span class="dash-row-text" data-i18n="dashReminderTimingLabel">通知するタイミング</span>
+        <select id="dashReminderMinutes" class="settings-toggle-btn" onchange="pfReminderSaveMinutes(this.value)">
+          <option value="10" data-i18n="dashReminder10">10分前</option>
+          <option value="30" data-i18n="dashReminder30">30分前</option>
+          <option value="60" data-i18n="dashReminder60">1時間前</option>
+          <option value="180" data-i18n="dashReminder180">3時間前</option>
+          <option value="1440" data-i18n="dashReminder1440">1日前</option>
+        </select>
+      </div>
+      <p class="dash-note" id="dashReminderStatus"></p>
+    </div>
+    <button type="button" class="settings-close-btn" onclick="pfDashClose()" data-i18n="closeButton">閉じる</button>
   </div>
 </div>
 
@@ -1649,47 +1588,9 @@
 
   ];
 
-  /* ================================================================
-     ▼▼▼ ここから編集：Sky Status（開催中・今後の予定） ▼▼▼
-     start / end は 'YYYY-MM-DDTHH:mm' 形式の日本時間（JST）です。
-     end はゲーム内の終了時刻（例: 15:59）の「最後の1秒」まで表示を続けたいので
-     'YYYY-MM-DDTHH:mm:59' のように秒まで指定してください（例: '2026-08-21T15:59:59'）。
-     end を過ぎた項目は自動で表示から消えるので、消す必要はありません。
-     新しいシーズン・イベントが発表されたら配列に追記してください。
-     ================================================================ */
-  const skySchedule = {
-    seasons: [
-      {
-        name: '親愛なるファン・ゴッホへ',
-        nameEn: 'Dear Fangogh',
-        start: '2026-07-17T16:00',
-        end: '2026-10-02T15:59:59',
-        note: 'シーズンキャンドルの取り忘れに注意',
-        noteEn: "Don't forget to collect your Season Candles"
-      }
-    ],
-    events: [
-      { name: '陽光の日々', nameEn: 'Days of Sunlight', start: '2026-07-31T16:00', end: '2026-08-21T15:59:59', note: '', noteEn: '' },
-      { name: '夏のキャンプ', nameEn: 'Summer Camp', start: '2026-08-28T16:00', end: '2026-09-11T15:59:59', note: '', noteEn: '' },
-    ],
-    // 通常の再訪(recurringVisitの周期に当てはまらない単発の復刻)はここに追加してください
-    specialVisits: [
-      // 例:
-      // { name: '復刻: 〇〇の季節の精霊たち', start: '2026-08-17T16:00', end: '2026-08-31T15:59:59', note: '' },
-      { name: '復刻: 九色の鹿の季節の精霊たち', nameEn: 'Reprint: Spirits of the Nine-Colored Deer Season', start: '2026-08-28T16:00', end: '2026-09-10T15:59:59', note: '薬草採集人・狩人・国王・王女', noteEn: 'Herb Gatherer, Hunter, Feudal Lord, Princess' },
-    ]
-  };
-
-  // 「再訪する精霊たち」は2週間おきに4日間（木16:00〜月15:59）来る周期イベントなので、
-  // 直近1回分の開始・終了日時を基準にすれば、以降は自動で計算されます。
-  // 周期がずれてきたら anchorStart / anchorEnd を最新の回に合わせて更新してください。
-  const recurringVisit = {
-    name: '再訪する精霊たち',
-    nameEn: 'The Returning Spirits',
-    anchorStart: '2026-08-27T16:00',
-    anchorEnd: '2026-08-31T15:59:59',
-    intervalDays: 14
-  };
+  // 季節・イベント・再訪の情報は、以前はここに手動で複製したデータを持っていたが、
+  // item(アイテム所持管理)側のデータと二重管理になり同期が崩れる問題があったため撤廃。
+  // 現在はダッシュボード（下部#pfDash*関連）がitem/index.htmlから直接fetchして表示する。
   /* ================================================================
      ▲▲▲ 編集はここまでです。この下は表示用のコードなので
      通常は触らなくて大丈夫です ▲▲▲
@@ -1709,34 +1610,70 @@
   let LANG = getStoredLang() || 'ja';
 
   const TRANSLATIONS = {
-    dailyRemainLabel: { ja: 'デイリー残り', en: 'Daily Reset In' },
-    edenResetLabel: { ja: '原罪リセットまで', en: 'Eden Reset In' },
     tapMe: { ja: 'タップしてみてね', en: 'Tap me!' },
     moreInfoSummary: { ja: '興味を持ってくれた方へ', en: 'For those curious to know more' },
     unofficialDisclaimer: { ja: 'このサイトはSky 星を紡ぐ子どもたちの非公式ファンサイトです。thatgamecompanyは一切関与していません。', en: 'This site is an unofficial fan site for Sky: Children of the Light. thatgamecompany is not involved in any way.' },
     settingsLink: { ja: '設定・更新情報・クレジット・プライバシーポリシー', en: 'Settings, Updates, Credits & Privacy Policy' },
-    gameTime: { ja: 'ゲーム内時間 {time}', en: 'Game Time {time}' },
-    dailyResetTooltip: { ja: 'デイリーリセットまで（日本時間 毎日 {hour}:00 リセット）', en: 'Time until Daily Reset (resets daily at {hour}:00 JST)' },
-    edenResetTooltip: { ja: 'エデンリセットまで（日本時間 日曜 {hour}:00 リセット）', en: 'Time until Eden Reset (resets Sundays at {hour}:00 JST)' },
-    edenDaysHours: { ja: '{d}日{h}時', en: '{d}d {h}h' },
-    season: { ja: '季節', en: 'Season' },
-    dailyEvent: { ja: '日々', en: 'Days' },
-    revisit: { ja: '再訪', en: 'Revisit' },
-    noPlans: { ja: '予定なし', en: 'None scheduled' },
-    endsIn: { ja: '終了まで{remain}', en: 'Ends in {remain}' },
-    startsIn: { ja: '開始まで{remain}', en: 'Starts in {remain}' },
-    revisitEndsIn: { ja: '帰るまで{remain}', en: 'Leaves in {remain}' },
-    revisitStartsIn: { ja: '訪れるまで{remain}', en: 'Arrives in {remain}' },
-    remainDays: { ja: 'あと{n}日', en: '{n}d' },
-    remainHours: { ja: 'あと{n}時間', en: '{n}h' },
-    remainMinutes: { ja: 'あと{n}分', en: '{n}m' },
-    remainSeconds: { ja: 'あと{n}秒', en: '{n}s' },
     shardNone: { ja: 'なし', en: 'None' },
     shardNoneTodayTooltip: { ja: '本日（日本時間）はこの後、闇の破片の出現予定はありません', en: 'No more Shard Eruptions are expected today (Japan time).' },
     redShard: { ja: '赤い破片', en: 'Red Shard' },
     blackShard: { ja: '黒い破片', en: 'Black Shard' },
     shardActiveTooltip: { ja: '{color}が来ています（{realm}・{place}）／終了まで{remain}', en: '{color} is here ({realm} · {place}) / Ends in {remain}' },
     shardUpcomingTooltip: { ja: '{color}が来ます（{place}）／開始まで{remain}', en: '{color} is coming ({place}) / Starts in {remain}' },
+    remainDays: { ja: 'あと{n}日', en: '{n}d' },
+    remainHours: { ja: 'あと{n}時間', en: '{n}h' },
+    remainMinutes: { ja: 'あと{n}分', en: '{n}m' },
+    remainSeconds: { ja: 'あと{n}秒', en: '{n}s' },
+
+    // 📅 ダッシュボード（今日・今週・今月）
+    dashTitle: { ja: '今日・今週・今月', en: 'Today / This Week / This Month' },
+    dashLoading: { ja: '読み込み中…', en: 'Loading…' },
+    dashLoadFailed: { ja: '読み込みに失敗しました', en: 'Failed to load' },
+    dashSectionDaily: { ja: 'デイリー', en: 'Daily' },
+    dashSectionToday: { ja: '今日', en: 'Today' },
+    dashSectionWeek: { ja: '今週', en: 'This Week' },
+    dashSectionMonth: { ja: '今月', en: 'This Month' },
+    dashNextIn: { ja: '次まで', en: 'Next in' },
+    dashNextEventIn: { ja: '次回まで', en: 'Next in' },
+    dashNoShardToday: { ja: '本日は闇の破片の出現はありません', en: 'No shard eruptions today' },
+    dashGrandCandle: { ja: '大キャンドル', en: 'Grand Candle' },
+    dashChangesIn: { ja: '次の変更まで', en: 'Changes in' },
+    dashQuestSeasonCandle: { ja: 'クエスト・シーズンキャンドル', en: 'Quest & Season Candle' },
+    dashGeyser: { ja: 'ウニ焼き', en: 'Geyser' },
+    dashBreadBaking: { ja: 'パン焼き', en: 'Bread Baking' },
+    dashTurtleDarkness: { ja: '亀闇', en: 'Turtle Darkness' },
+    dashCurrentlyActive: { ja: 'が開催中', en: ' is currently active' },
+    dashEndsIn: { ja: '終了まで', en: 'Ends in' },
+    dashSeasonEndsInSuffix: { ja: '終了まで', en: ' ends in' },
+    dashQuoteOpen: { ja: '「', en: '' },
+    dashQuoteClose: { ja: '」', en: '' },
+    dashRevisitSpirit: { ja: '再訪精霊', en: 'Revisit Spirit' },
+    dashRevisitHereNow: { ja: 'が来訪中', en: ' is here now' },
+    dashRevisitReturnsIn: { ja: 'の次回来訪まで', en: ' returns in' },
+    dashNoCurrentSeasonEvent: { ja: '現在開催中の季節・イベントはありません', en: 'No current seasons or events' },
+    dashEyeOfEden: { ja: '原罪', en: 'Eye of Eden' },
+    dashWeeklyResetIn: { ja: '週間リセットまで', en: 'Weekly reset in' },
+    dashEverySundayPacific: { ja: '毎週日曜0時・太平洋時間', en: 'Every Sunday 00:00 Pacific Time' },
+    dashNextUpdate: { ja: '次回アップデート予定', en: 'Next Update' },
+    dashSeasonLoadFailed: { ja: 'シーズン情報が取得できませんでした', en: 'Could not load season info' },
+    dashBucketEmpty: { ja: 'この期間の予定はありません', en: 'Nothing scheduled in this range' },
+    dashDayUnit: { ja: '日', en: 'd' },
+    labelSep: { ja: '：', en: ': ' },
+    dashReminderSection: { ja: '通知リマインダー', en: 'Notification Reminders' },
+    dashReminderCheckboxLabel: { ja: '季節・イベントの終了やリセットが近づいたら通知する', en: 'Notify me when a season, event, or reset is about to end' },
+    dashReminderTimingLabel: { ja: '通知するタイミング', en: 'Remind me' },
+    dashReminder10: { ja: '10分前', en: '10 min before' },
+    dashReminder30: { ja: '30分前', en: '30 min before' },
+    dashReminder60: { ja: '1時間前', en: '1 hour before' },
+    dashReminder180: { ja: '3時間前', en: '3 hours before' },
+    dashReminder1440: { ja: '1日前', en: '1 day before' },
+    dashReminderStatusUnsupported: { ja: 'この端末・ブラウザは通知に対応していません', en: 'Notifications are not supported on this device/browser' },
+    dashReminderStatusBlocked: { ja: 'ブラウザの通知が拒否されています。ブラウザの設定から許可すると使えます', en: 'Notifications are blocked. Allow them in your browser settings to use this.' },
+    dashReminderStatusEnabled: { ja: '有効：終了・リセットが近づくとこの端末に通知します（このページを開いている間のみ）', en: 'Enabled: you’ll get a notification as it approaches (only while this page is open)' },
+    dashReminderNotifTitle: { ja: 'まもなく終了', en: 'Ending soon' },
+    dashReminderNotifBodyTemplate: { ja: '{label} — 残り {countdown}', en: '{label} — {countdown} left' },
+    dashReminderDailyResetLabel: { ja: 'デイリーリセット（大キャンドル交代）', en: 'Daily reset (Grand Candle change)' },
+    dashReminderEdenResetLabel: { ja: '原罪：週間リセット', en: 'Eye of Eden: weekly reset' },
 
     // ⚙️ 表示設定モーダル
     settingsButtonTitle: { ja: '表示設定', en: 'Display Settings' },
@@ -1836,10 +1773,14 @@
     applyI18n();
     renderProfile();
     renderLinks();
-    updateSkyClocks();
-    renderSkyActive();
     renderShardBadge();
     syncSettingsUI();
+    // ダッシュボードを開いたまま言語切替した場合、通知リマインダーの動的な状態文言
+    // （許可済み/拒否/未対応）は data-i18n では再描画されないため、ここで明示的に同期する
+    if (typeof pfSyncReminderUI === 'function') pfSyncReminderUI();
+    if (pfDashCache && document.getElementById('dashModalOverlay').classList.contains('open')) {
+      document.getElementById('dashBody').innerHTML = pfDashBuildHtml(pfDashCache);
+    }
   }
 
   // ⚙️ 表示設定モーダル内の🌐言語セレクター用：ボタンを押すたびに交互に切り替える
@@ -1854,10 +1795,12 @@
     applyI18n();
     renderProfile();
     renderLinks();
-    updateSkyClocks();
-    renderSkyActive();
     renderShardBadge();
     syncSettingsUI();
+    if (typeof pfSyncReminderUI === 'function') pfSyncReminderUI();
+    if (pfDashCache && document.getElementById('dashModalOverlay').classList.contains('open')) {
+      document.getElementById('dashBody').innerHTML = pfDashBuildHtml(pfDashCache);
+    }
   }
 
   /* ================================================================
@@ -2134,19 +2077,18 @@
     const el = document.getElementById('card');
     if (el) el.scrollIntoView({ behavior: prefersReducedMotionForScroll() ? 'auto' : 'smooth', block: 'start' });
   }
-  function dockGoDashboard() {
-    const el = document.getElementById('skyPanelClock');
-    if (el) el.scrollIntoView({ behavior: prefersReducedMotionForScroll() ? 'auto' : 'smooth', block: 'center' });
-  }
   function prefersReducedMotionForScroll() {
     try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; }
   }
 
-  // ⌨️ Escキーで、開いていれば表示設定モーダル→モバイル版「他のツール」ドロワーの順に閉じる
-  // （このリポジトリで同時に開き得るオーバーレイはこの2つだけなので、優先度つきで順に見ればよい）。
+  // ⌨️ Escキーで、開いていれば表示設定モーダル→ダッシュボード→モバイル版「他のツール」
+  // ドロワーの順に閉じる（このリポジトリで同時に開き得るオーバーレイはこの3つだけなので、
+  // 優先度つきで順に見ればよい）。
   function closeTopmostOpenModal() {
     const overlay = document.getElementById('settingsModalOverlay');
     if (overlay && overlay.classList.contains('open')) { settingsClose(); return; }
+    const dashOverlay = document.getElementById('dashModalOverlay');
+    if (dashOverlay && dashOverlay.classList.contains('open')) { pfDashClose(); return; }
     const sidebar = document.getElementById('sidebar');
     if (sidebar && sidebar.classList.contains('sidebar-open')) { closeSidebarMobile(); return; }
   }
@@ -2408,64 +2350,8 @@
     };
   }
 
-  // PTの0:00は日本時間の16時（夏時間）/17時（冬時間）。現在のPT/JST時差から逆算する
-  function jstResetHour() {
-    const now = new Date();
-    const pt = new Date(now.toLocaleString('en-US', { timeZone: PT_ZONE }));
-    const jst = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
-    const diffH = Math.round((jst - pt) / 3600000);
-    return diffH % 24;
-  }
-
-  function updateSkyClocks() {
-    const pt = getZoneParts(PT_ZONE);
-    const jst = getZoneParts('Asia/Tokyo');
-
-    document.getElementById('skyJstClock').textContent = `${pad2(jst.h)}:${pad2(jst.mi)}:${pad2(jst.s)}`;
-    document.getElementById('skyClockSub').textContent = t('gameTime', { time: `${pad2(pt.h)}:${pad2(pt.mi)}` });
-
-    // デイリーリセット: 毎日 Sky時間0:00（＝PT 0:00）
-    const secOfDay = pt.h * 3600 + pt.mi * 60 + pt.s;
-    const secLeft = 86400 - secOfDay;
-    const dh = Math.floor(secLeft / 3600), dm = Math.floor((secLeft % 3600) / 60), ds = secLeft % 60;
-    const dailyEl = document.getElementById('skyDailyCountdown');
-    dailyEl.textContent = `${pad2(dh)}:${pad2(dm)}:${pad2(ds)}`;
-    dailyEl.classList.toggle('soon', secLeft <= 3600);
-    const rh = jstResetHour();
-    document.getElementById('skyDailyResetMini').title = t('dailyResetTooltip', { hour: rh });
-
-    // エデンリセット: Sky時間の日曜0:00（＝PT 日曜0:00）
-    const weekdayIdx = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(pt.weekday);
-    const daysLeft = (7 - weekdayIdx) % 7;
-    const edenSecLeft = (daysLeft === 0 ? 7 * 86400 : daysLeft * 86400) - secOfDay;
-    const ed = Math.floor(edenSecLeft / 86400), eh = Math.floor((edenSecLeft % 86400) / 3600), em = Math.floor((edenSecLeft % 3600) / 60);
-    const edenEl = document.getElementById('skyEdenCountdown');
-    if (ed > 0) {
-      edenEl.innerHTML = highlightNumberUnit(t('edenDaysHours', { d: ed, h: pad2(eh) }));
-    } else {
-      edenEl.textContent = `${pad2(eh)}:${pad2(em)}:${pad2(edenSecLeft % 60)}`;
-    }
-    edenEl.classList.toggle('soon', edenSecLeft <= 3600 * 6);
-    document.getElementById('skyEdenResetMini').title = t('edenResetTooltip', { hour: rh });
-  }
-  setInterval(updateSkyClocks, 1000);
-  updateSkyClocks();
-
-  /* ================================================================
-     📅 Sky Status：季節・日々（イベント）・再訪の状況を常に3行で表示
-     季節名やイベント名は長いため、実際の名前の代わりに種別名
-     （季節／日々／再訪）を表示し、実際の名前は説明（title属性）で確認できます。
-     ================================================================ */
-  // skySchedule の日時（JST表記）を、閲覧環境のタイムゾーンに関係なくJSTとして解釈する
-  // 'YYYY-MM-DDTHH:mm'（16文字）と 'YYYY-MM-DDTHH:mm:ss'（19文字、endの秒指定用）の両方に対応
-  function parseSkyJst(s) {
-    if (s.length === 16) return new Date(s + ':00+09:00');
-    if (s.length === 19) return new Date(s + '+09:00');
-    return new Date(s);
-  }
-  function fmtSkyDate(d) {
-    return new Intl.DateTimeFormat('ja-JP', { timeZone: 'Asia/Tokyo', month: 'numeric', day: 'numeric' }).format(d);
-  }
+  // 残り時間を「あとN日／N時間／N分／N秒」の粗い単位で表示する（闇の破片バッジや
+  // ダッシュボードのカウントダウン系の短い表示に使う。秒未満の精度は不要なため）
   function fmtSkyRemain(ms) {
     const days = Math.floor(ms / 86400000);
     if (days >= 1) return t('remainDays', { n: days });
@@ -2475,178 +2361,6 @@
     if (mi >= 1) return t('remainMinutes', { n: mi });
     return t('remainSeconds', { n: Math.max(0, Math.floor(ms / 1000)) });
   }
-  function escapeSkyHtml(s) {
-    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  }
-
-  // 🔢 数字とその直後の単位（日・時間・分・秒 や d/h/m/s 等）を分けて表示するため、
-  // 数字に続く単位文字だけを<span class="sky-unit">で包んで弱める（数字自体は無加工のまま）。
-  // 呼び出す文字列は数字と単位以外に記号を含まない前提のため、ここでは値をエスケープしていない。
-  // ここで組んだHTMLはinnerHTMLとして挿入する箇所専用（title属性等の生テキストには使わないこと）。
-  function highlightNumberUnit(str) {
-    return String(str).replace(/(\d+)([^\d\s]+)/g, '$1<span class="sky-unit">$2</span>');
-  }
-
-  // 配列の中から「現在開催中のもの」と「一番近い今後の予定」を探す
-  function findActiveOrNext(entries) {
-    const now = new Date();
-    let active = null, next = null;
-    (entries || []).forEach(ev => {
-      const start = parseSkyJst(ev.start);
-      const end = parseSkyJst(ev.end);
-      if (isNaN(start) || isNaN(end) || end < now) return;
-      if (start <= now) {
-        if (!active || end < active.end) active = { ev, start, end };
-      } else {
-        if (!next || start < next.start) next = { ev, start, end };
-      }
-    });
-    return { active, next };
-  }
-
-  // renderSkyActive は1秒おきに再描画されるため、タップで開いた詳細（is-expanded）が
-  // 次の描画で即座に消えてしまう。カテゴリごとの開閉状態をここに保持し、再描画時にも
-  // 復元することで、タップした詳細がすぐ閉じてしまう問題を防ぐ。
-  const skyExpandedCategories = new Set();
-  function skyToggleActiveDetail(label, el) {
-    if (skyExpandedCategories.has(label)) skyExpandedCategories.delete(label);
-    else skyExpandedCategories.add(label);
-    el.classList.toggle('is-expanded');
-  }
-
-  function skyCategoryRowHtml(icon, categoryKey, info, phrasing) {
-    // categoryKey（'season'|'dailyEvent'|'revisit'）は言語に依存しない内部キー。
-    // 表示用ラベルはt()で都度求め、開閉状態(skyExpandedCategories)のキーには
-    // categoryKeyを使うことで、言語を切り替えても開閉状態が保持されるようにしている。
-    const label = t(categoryKey);
-    const now = new Date();
-    let text, stateClass, entry;
-    if (info.active) {
-      entry = info.active;
-      const remain = fmtSkyRemain(entry.end - now);
-      text = highlightNumberUnit(phrasing ? phrasing.now(remain) : t('endsIn', { remain }));
-      stateClass = 'is-now';
-    } else if (info.next) {
-      entry = info.next;
-      const remain = fmtSkyRemain(entry.start - now);
-      text = highlightNumberUnit(phrasing ? phrasing.next(remain) : t('startsIn', { remain }));
-      stateClass = 'is-future';
-    } else {
-      return `
-      <div class="sky-active-item">
-        <span class="sky-active-icon">${icon}</span>
-        <div class="sky-active-text">
-          <div class="sky-active-name">${label}</div>
-          <div class="sky-active-remain sky-active-none">${t('noPlans')}</div>
-        </div>
-      </div>`;
-    }
-    const range = LANG === 'en'
-      ? `${fmtSkyDate(entry.start)} - ${fmtSkyDate(entry.end)}`
-      : `${fmtSkyDate(entry.start)}〜${fmtSkyDate(entry.end)}`;
-    const fullName = escapeSkyHtml(localizedField(entry.ev, 'name'));
-    const noteText = localizedField(entry.ev, 'note');
-    const noteHtml = noteText ? `<br>${escapeSkyHtml(noteText)}` : '';
-    const titleText = LANG === 'en'
-      ? `${fullName} (${range})${noteText ? ' / ' + escapeSkyHtml(noteText) : ''}`
-      : `${fullName}（${range}）${noteText ? ' ／ ' + escapeSkyHtml(noteText) : ''}`;
-    // PCではtitle属性のホバーで、スマホ等タップ操作の環境ではこの要素自体をタップして
-    // .sky-active-detail を開閉することで、どちらでも正式名称・期間を確認できるようにする。
-    const isExpanded = skyExpandedCategories.has(categoryKey);
-    return `
-      <div class="sky-active-item sky-active-toggle${isExpanded ? ' is-expanded' : ''}" title="${titleText}" role="button" tabindex="0"
-        onclick="skyToggleActiveDetail('${categoryKey}', this)"
-        onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();skyToggleActiveDetail('${categoryKey}', this);}">
-        <span class="sky-active-icon">${icon}</span>
-        <div class="sky-active-text">
-          <div class="sky-active-name">${label}<span class="sky-active-expand-hint"><svg class="inline-icon" width="13" height="13"><use href="#i-chevron-right"/></svg></span></div>
-          <div class="sky-active-remain ${stateClass}">${text}</div>
-          <div class="sky-active-detail">${LANG === 'en' ? `${fullName} (${range})${noteHtml}` : `${fullName}（${range}）${noteHtml}`}</div>
-        </div>
-      </div>`;
-  }
-
-  // recurringVisit（〇日おきに△日間、というパターンの再訪）から
-  // 「現在開催中」または「一番近い今後の回」を計算する
-  function findRecurringOccurrence(rule) {
-    if (!rule || !rule.anchorStart || !rule.anchorEnd || !rule.intervalDays) return { active: null, next: null };
-    const anchorStart = parseSkyJst(rule.anchorStart);
-    const anchorEnd = parseSkyJst(rule.anchorEnd);
-    const durationMs = anchorEnd - anchorStart;
-    const intervalMs = rule.intervalDays * 86400000;
-    const now = new Date();
-    const k = Math.floor((now - anchorStart) / intervalMs);
-    let active = null, next = null;
-    for (let i = k - 1; i <= k + 1; i++) {
-      const start = new Date(anchorStart.getTime() + i * intervalMs);
-      const end = new Date(start.getTime() + durationMs);
-      const ev = { name: rule.name, nameEn: rule.nameEn, note: rule.note || '', noteEn: rule.noteEn || '' };
-      if (start <= now && now < end) {
-        active = { ev, start, end };
-      } else if (start > now && (!next || start < next.start)) {
-        next = { ev, start, end };
-      }
-    }
-    return { active, next };
-  }
-
-  // 単発の specialVisits（手動登録分）と recurringVisit（周期分）をあわせて、
-  // 「現在開催中」「一番近い今後の回」を1つに絞り込む
-  function findVisitInfo() {
-    const manual = findActiveOrNext(skySchedule.specialVisits);
-    const recurring = findRecurringOccurrence(recurringVisit);
-    const active = manual.active || recurring.active;
-    let next = null;
-    [manual.next, recurring.next].forEach(n => {
-      if (n && (!next || n.start < next.start)) next = n;
-    });
-    return { active, next };
-  }
-
-  function renderSkyActive() {
-    const seasonInfo = findActiveOrNext(skySchedule.seasons);
-    const eventInfo = findActiveOrNext(skySchedule.events);
-    const visitInfo = findVisitInfo();
-
-    const dotEl = document.getElementById('skyNowDot');
-    if (dotEl) dotEl.style.visibility = (seasonInfo.active || eventInfo.active || visitInfo.active) ? 'visible' : 'hidden';
-
-    document.getElementById('skyActiveList').innerHTML =
-      skyCategoryRowHtml('<svg class="inline-icon" width="16" height="16"><use href="#i-leaf"/></svg>', 'season', seasonInfo) +
-      skyCategoryRowHtml('<svg class="inline-icon" width="16" height="16"><use href="#i-star"/></svg>', 'dailyEvent', eventInfo) +
-      skyCategoryRowHtml('<svg class="inline-icon" width="16" height="16"><use href="#i-sync"/></svg>', 'revisit', visitInfo, {
-        now:  remain => t('revisitEndsIn', { remain }),
-        next: remain => t('revisitStartsIn', { remain })
-      });
-  }
-  renderSkyActive();
-  setInterval(renderSkyActive, 1000);
-
-  /* ================================================================
-     🛡️ スケジュール安全装置（管理者向け）
-     skySchedule.events は「日々」イベントを常に1件は入れておく想定だが、
-     空になっても画面上は静かに「予定なし」と表示されるだけで気づきにくい。
-     ページ利用者には見えない console.warn だけの軽量なチェックとして、
-     events が空、または登録されている項目がすべて終了している場合に
-     開発者ツールのコンソールへ警告を出す（ページ読み込み時に1回だけ）。
-     ================================================================ */
-  function checkScheduleHealth() {
-    const now = new Date();
-    const events = skySchedule.events || [];
-    const hasCurrentOrUpcoming = events.some(function (ev) {
-      const end = parseSkyJst(ev.end);
-      return !isNaN(end) && end >= now;
-    });
-    if (!hasCurrentOrUpcoming) {
-      console.warn(
-        '⚠️ [Sky Status] skySchedule.events が空か、登録されている項目がすべて終了しています。' +
-        'index.html 内の skySchedule.events に新しい「日々」イベントを追加してください。\n' +
-        '⚠️ [Sky Status] skySchedule.events is empty, or every entry in it has already ended. ' +
-        'Please add a new "Days" event to skySchedule.events in index.html.'
-      );
-    }
-  }
-  checkScheduleHealth();
 
   /* ================================================================
      🔺 闇の破片（シャード）の有無・色・場所
@@ -2813,6 +2527,512 @@
   }
   renderShardBadge();
   setInterval(renderShardBadge, 30000);
+
+  /* ================================================================
+     🗓️ ダッシュボード（今日・今週・今月）
+     他の姉妹サイトと共通の機構。データの本家はitem（アイテム所持管理）の
+     index.html（CURRENT_SEASON・EVENT_SCHEDULE・CANDLE_BONUS_SCHEDULE・
+     REVISIT_SPIRIT_SCHEDULES・NEXT_UPDATE）。二重管理を避けるため、常に
+     item/index.htmlをfetchして読む（他サイトと同じ考え方）。
+     闇の破片（シャード）の行だけは、このサイトに既にある検証済みの
+     findShardStatus()（PT基準・DST安全な予測）をそのまま再利用し、
+     出現予測アルゴリズムを重複実装しない。
+     ================================================================ */
+  // HTMLに埋め込まれた `const 変数名 = [...]`（または `{...}`）を安全に取り出す
+  function pfExtractArray(html, varName) {
+    const m = html.match(new RegExp('const ' + varName + '\\s*=\\s*([\\[{][\\s\\S]*?\\n[\\]}]);'));
+    if (!m) return null;
+    try { return new Function('return ' + m[1] + ';')(); } catch (e) { console.error(varName, e); return null; }
+  }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+  function pfDashPacificNow() {
+    return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+  }
+  function pfDashNextEdenResetTarget() {
+    const now = pfDashPacificNow();
+    const realOffsetMs = Date.now() - now.getTime();
+    const todayMidnight = new Date(now);
+    todayMidnight.setHours(0, 0, 0, 0);
+    let addDays = (7 - todayMidnight.getDay()) % 7;
+    if (addDays === 0 && now.getTime() > todayMidnight.getTime()) addDays = 7;
+    const target = new Date(todayMidnight);
+    target.setDate(target.getDate() + addDays);
+    return new Date(target.getTime() + realOffsetMs);
+  }
+
+  // 日替わり大キャンドル（キャンドルのかたまり）の出現エリア予測。太平洋時間0時に、
+  // 草原→雨林→峡谷→荒野→書庫の順で毎日切り替わる固定ローテーション
+  // （Sky公式Xアカウント@thatskygameJPが「太平洋標準時の0時に更新」と明言済み）。
+  // 2026-08-13（太平洋時間の日付）が荒野だったことを起点に計算する。
+  const GRAND_CANDLE_ANCHOR_DATE = new Date(2026, 7, 13);
+  const GRAND_CANDLE_ANCHOR_REALM_IDX = 3;
+  function pfDashGrandCandleRealm(dayOffset = 0) {
+    const pacNow = pfDashPacificNow();
+    const today = new Date(pacNow);
+    today.setHours(0, 0, 0, 0);
+    today.setDate(today.getDate() + dayOffset);
+    const anchor = new Date(GRAND_CANDLE_ANCHOR_DATE);
+    anchor.setHours(0, 0, 0, 0);
+    const daysSince = Math.round((today - anchor) / 86400000);
+    const idx = (((GRAND_CANDLE_ANCHOR_REALM_IDX + daysSince) % 5) + 5) % 5;
+    return SHARD_REALMS[idx];
+  }
+
+  // ウニ焼き・パン焼き・亀闇：2時間おき（太平洋時間の偶数時）に発生する協力プレイイベント。
+  // サマータイム期間中は各偶数時（0,2,4,...,22時）の指定の分から開始する
+  // （ユーザーからの実測情報に基づく。標準時期間のオフセットは未確認）。
+  function pfDashNextEvenHourEvent(minuteOffset) {
+    const pacNow = pfDashPacificNow();
+    const realOffsetMs = Date.now() - pacNow.getTime();
+    const candidate = new Date(pacNow);
+    candidate.setSeconds(0, 0);
+    candidate.setMinutes(minuteOffset);
+    const curHour = candidate.getHours();
+    candidate.setHours(curHour % 2 === 0 ? curHour : curHour - 1);
+    if (candidate.getTime() <= pacNow.getTime()) candidate.setTime(candidate.getTime() + 2 * 3600000);
+    return new Date(candidate.getTime() + realOffsetMs);
+  }
+
+  // 次に太平洋時間0時（＝日替わり大キャンドルの切り替わりのタイミング）を迎える実時刻
+  function pfDashNextPacificMidnight() {
+    const pacNow = pfDashPacificNow();
+    const realOffsetMs = Date.now() - pacNow.getTime();
+    const target = new Date(pacNow);
+    target.setHours(24, 0, 0, 0);
+    return new Date(target.getTime() + realOffsetMs);
+  }
+
+  // 指定の未来時刻までの残り時間を「D日 HH:MM:SS」（1日未満なら「HH:MM:SS」）で表示する、
+  // リアルタイムカウントダウン用のフォーマッタ
+  function pfDashCountdown(target) {
+    const ms = target - new Date();
+    if (ms <= 0) return '00:00:00';
+    const totalSec = Math.floor(ms / 1000);
+    const days = Math.floor(totalSec / 86400);
+    const hh = String(Math.floor((totalSec % 86400) / 3600)).padStart(2, '0');
+    const mm = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
+    const ss = String(totalSec % 60).padStart(2, '0');
+    return days > 0 ? `<b class="dash-count-num">${days}</b><span class="dash-count-unit">${t('dashDayUnit')}</span> ${hh}:${mm}:${ss}` : `${hh}:${mm}:${ss}`;
+  }
+
+  // ダッシュボードの今日/今週/今月は「項目の種類」ではなく「実際の残り時間」で振り分ける
+  // （24時間未満=今日、7日未満=今週、それ以上=今月）
+  function pfDashBucketFor(target) {
+    if (!target) return 'month';
+    const ms = target.getTime() - Date.now();
+    const MS_DAY = 24 * 60 * 60 * 1000, MS_WEEK = 7 * MS_DAY;
+    if (ms <= MS_DAY) return 'today';
+    if (ms <= MS_WEEK) return 'week';
+    return 'month';
+  }
+
+  // 🌐 ダッシュボード用の季節名・期間限定イベント名の英訳。item側のCURRENT_SEASON/
+  // EVENT_SCHEDULEは日本語表記のみのため、このサイト側でこの表を持ち、日本語の完全一致で
+  // 引く（他の姉妹サイトと同じ考え方。未収録の場合は日本語のままフォールバックする）。
+  const DASH_EVENT_NAME_EN = {
+    '親愛なるファン・ゴッホへ': 'Dear Van Gogh',
+    '陽光の日々': 'Days of Sunlight',
+    '光に染まるイベント': 'Event of Radiant Light',
+    '来訪する精霊団': 'Traveling Spirit Troupe',
+    '夏のキャンプ': 'Summer Camp',
+    '大キャン２倍・シーズンキャンドル２倍': 'Double Grand & Season Candles',
+  };
+  function dashEventName(name) {
+    return LANG === 'en' ? (DASH_EVENT_NAME_EN[name] || name) : name;
+  }
+
+  function pfDashRevisitStatus(schedule) {
+    if (!schedule) return null;
+    const now = new Date();
+    if (schedule.intervalDays) {
+      if (!schedule.anchorStart || !schedule.anchorEnd) return null;
+      const start0 = new Date(schedule.anchorStart);
+      const end0 = new Date(schedule.anchorEnd);
+      const intervalMs = schedule.intervalDays * 86400000;
+      const k = Math.floor((now - start0) / intervalMs);
+      const start = new Date(start0.getTime() + k * intervalMs);
+      const end = new Date(start.getTime() + (end0 - start0));
+      if (start <= now && now <= end) return { active: true, daysLeft: Math.ceil((end - now) / 86400000), target: end };
+      const nextStart = now < start ? start : new Date(start.getTime() + intervalMs);
+      return { active: false, daysUntil: Math.ceil((nextStart - now) / 86400000), target: nextStart };
+    }
+    // 一回限りの来訪（intervalDaysなし）：start/endで判定し、終了済みなら二度と表示しない
+    if (!schedule.start || !schedule.end) return null;
+    const start = new Date(schedule.start), end = new Date(schedule.end);
+    if (start <= now && now <= end) return { active: true, daysLeft: Math.ceil((end - now) / 86400000), target: end };
+    if (now < start) return { active: false, daysUntil: Math.ceil((start - now) / 86400000), target: start };
+    return null;
+  }
+  // 複数の来訪(周期的な単独の旅の精霊・期間限定の来訪団など)が同時に進行することがあるため、
+  // それぞれの状態をまとめて計算する。「旅の精霊」の周期来訪と「来訪する精霊団」による過去
+  // シーズンアイテムの再訪は別物（後者は該当アイテムのevent欄が元の季節名のままで、来訪する
+  // 精霊団の開催中もそのアイテムだけ別途「再訪中」の対象になる）のため、どちらも省略せず
+  // それぞれ独立した行として表示する。
+  function pfDashRevisitStatuses(schedules) {
+    return (schedules || [])
+      .map(schedule => ({ schedule, status: pfDashRevisitStatus(schedule) }))
+      .filter(x => x.status);
+  }
+  async function pfDashLoadData() {
+    const res = await fetch(`${location.origin}/tai-item/index.html`);
+    const html = await res.text();
+    return {
+      revisitSchedules: pfExtractArray(html, 'REVISIT_SPIRIT_SCHEDULES') || [],
+      season: pfExtractArray(html, 'CURRENT_SEASON') || null,
+      eventSchedule: pfExtractArray(html, 'EVENT_SCHEDULE') || [],
+      candleBonusSchedule: pfExtractArray(html, 'CANDLE_BONUS_SCHEDULE') || [],
+      nextUpdate: pfExtractArray(html, 'NEXT_UPDATE') || null,
+    };
+  }
+  // 開始・終了日時付きのイベント一覧（EVENT_SCHEDULE）から、現在開催期間中のものだけを返す。
+  // startを省略しているエントリは「常に開催中→endで終了」として扱う
+  function pfDashActiveScheduledEvents(schedule) {
+    const now = new Date();
+    return (schedule || []).filter(ev => {
+      const end = new Date(ev.end);
+      const start = ev.start ? new Date(ev.start) : null;
+      return now <= end && (!start || now >= start);
+    });
+  }
+  function pfDashRow(icon, html) {
+    return `<div class="dash-row"><span class="dash-row-icon">${icon}</span><span class="dash-row-text">${html}</span></div>`;
+  }
+  // 闇の破片の行だけは、このサイトに既にある検証済みのfindShardStatus()をそのまま使う
+  // （他サイトのように出現予測アルゴリズムを別途複製しない）。表示文言もページ上部の
+  // シャードバッジ（renderShardBadge）と揃えるため、同じ翻訳キー・同じfmtSkyRemain()を使う。
+  function pfDashShardRowHtml() {
+    const status = findShardStatus();
+    if (!status) return pfDashRow('<svg class="inline-icon" width="16" height="16"><use href="#i-moon"/></svg>', t('dashNoShardToday'));
+    const now = new Date();
+    if (!status.active) {
+      const todayJst = getZoneParts('Asia/Tokyo', now);
+      const startJst = getZoneParts('Asia/Tokyo', status.start);
+      const isStartToday = todayJst.y === startJst.y && todayJst.mo === startJst.mo && todayJst.d === startJst.d;
+      if (!isStartToday) {
+        return pfDashRow('<svg class="inline-icon" width="16" height="16"><use href="#i-moon"/></svg>', t('dashNoShardToday'));
+      }
+    }
+    const place = LANG === 'en' ? (status.placeEn || status.place) : status.place;
+    const colorName = status.color === 'red' ? t('redShard') : t('blackShard');
+    const dotColor = status.color === 'red' ? 'var(--red, #b84425)' : '#8e8e93';
+    const icon = `<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${dotColor};"></span>`;
+    const remain = fmtSkyRemain(status.active ? (status.end - now) : (status.start - now));
+    const text = status.active
+      ? t('shardActiveTooltip', { color: colorName, realm: realmName(SHARD_REALMS[status.realmIdx]), place, remain })
+      : t('shardUpcomingTooltip', { color: colorName, place, remain });
+    return pfDashRow(icon, text);
+  }
+  function pfDashBuildHtml(data) {
+    const dailyRows = [];
+    dailyRows.push(pfDashShardRowHtml());
+    const candleRealm = pfDashGrandCandleRealm();
+    dailyRows.push(pfDashRow('<svg class="inline-icon" width="16" height="16"><use href="#i-candle"/></svg>', `${t('dashGrandCandle')}${t('labelSep')}<b>${realmName(candleRealm)}</b><span class="dash-countdown">${t('dashChangesIn')} ${pfDashCountdown(pfDashNextPacificMidnight())}</span>`));
+    const questCandleRealm = pfDashGrandCandleRealm(-1);
+    dailyRows.push(pfDashRow('<svg class="inline-icon" width="16" height="16"><use href="#i-scroll"/></svg>', `${t('dashQuestSeasonCandle')}${t('labelSep')}<b>${realmName(questCandleRealm)}</b><span class="dash-countdown">${t('dashChangesIn')} ${pfDashCountdown(pfDashNextPacificMidnight())}</span>`));
+    dailyRows.push(pfDashRow('<svg class="inline-icon" width="16" height="16"><use href="#i-geyser"/></svg>', `${t('dashGeyser')}<span class="dash-countdown">${t('dashNextEventIn')} ${pfDashCountdown(pfDashNextEvenHourEvent(5))}</span>`));
+    dailyRows.push(pfDashRow('<svg class="inline-icon" width="16" height="16"><use href="#i-bread"/></svg>', `${t('dashBreadBaking')}<span class="dash-countdown">${t('dashNextEventIn')} ${pfDashCountdown(pfDashNextEvenHourEvent(35))}</span>`));
+    dailyRows.push(pfDashRow('<svg class="inline-icon" width="16" height="16"><use href="#i-turtle"/></svg>', `${t('dashTurtleDarkness')}<span class="dash-countdown">${t('dashNextEventIn')} ${pfDashCountdown(pfDashNextEvenHourEvent(50))}</span>`));
+    const dailyHtml = dailyRows.join('');
+
+    // 種類ではなく、各項目の実際の残り時間で今日/今週/今月へ振り分ける（pfDashBucketFor）。
+    // 季節が「開催中」であること自体は常に今日欄に残す（カウントダウンを伴わない単なる
+    // 状態表示のため、時間による振り分けの対象外）。
+    const bucketRows = { today: [], week: [], month: [] };
+    let seasonErrored = false;
+    if (data.season && data.season.name && data.season.endDate && new Date() < new Date(data.season.endDate)) {
+      bucketRows.today.push(pfDashRow('<svg class="inline-icon" width="16" height="16"><use href="#i-star"/></svg>', `<b>${escapeHtml(dashEventName(data.season.name))}</b>${t('dashCurrentlyActive')}`));
+    }
+    pfDashActiveScheduledEvents(data.eventSchedule).forEach(ev => {
+      const endDate = new Date(ev.end);
+      bucketRows[pfDashBucketFor(endDate)].push(pfDashRow('<svg class="inline-icon" width="16" height="16"><use href="#i-star"/></svg>', `<b>${escapeHtml(dashEventName(ev.name))}</b>${t('dashCurrentlyActive')}<span class="dash-countdown">${t('dashEndsIn')} ${pfDashCountdown(endDate)}</span>`));
+    });
+    pfDashActiveScheduledEvents(data.candleBonusSchedule).forEach(ev => {
+      const bonusEnd = new Date(ev.end);
+      bucketRows[pfDashBucketFor(bonusEnd)].push(pfDashRow('<svg class="inline-icon" width="16" height="16"><use href="#i-candle"/></svg>', `<b>${escapeHtml(dashEventName(ev.name))}</b>${t('dashCurrentlyActive')}<span class="dash-countdown">${t('dashEndsIn')} ${pfDashCountdown(bonusEnd)}</span>`));
+    });
+    pfDashRevisitStatuses(data.revisitSchedules).forEach(({ status: rv }) => {
+      const revisitLabel = rv.active
+        ? `${t('dashRevisitSpirit')}${t('dashRevisitHereNow')}`
+        : `${t('dashRevisitSpirit')}${t('dashRevisitReturnsIn')}`;
+      bucketRows[pfDashBucketFor(rv.target)].push(pfDashRow('<svg class="inline-icon" width="16" height="16"><use href="#i-wing"/></svg>', `${revisitLabel}<span class="dash-countdown">${pfDashCountdown(rv.target)}</span>`));
+    });
+    const edenTarget = pfDashNextEdenResetTarget();
+    bucketRows[pfDashBucketFor(edenTarget)].push(pfDashRow('<svg class="inline-icon" width="16" height="16"><use href="#i-bolt"/></svg>', `${t('dashEyeOfEden')}${t('labelSep')}${t('dashWeeklyResetIn')}<span class="dash-countdown">${pfDashCountdown(edenTarget)}</span><span class="dash-note">${t('dashEverySundayPacific')}</span>`));
+    if (data.nextUpdate && data.nextUpdate.date) {
+      const updateTarget = new Date(data.nextUpdate.date);
+      if (new Date() < updateTarget) {
+        bucketRows[pfDashBucketFor(updateTarget)].push(pfDashRow('<svg class="inline-icon" width="16" height="16"><use href="#i-hammer"/></svg>', `${t('dashNextUpdate')}<span class="dash-countdown">${pfDashCountdown(updateTarget)}</span>`));
+      }
+    }
+    if (data.season && data.season.endDate) {
+      const end = new Date(data.season.endDate);
+      bucketRows[pfDashBucketFor(end)].push(pfDashRow('<svg class="inline-icon" width="16" height="16"><use href="#i-palette"/></svg>', `${t('dashQuoteOpen')}<b>${escapeHtml(dashEventName(data.season.name))}</b>${t('dashQuoteClose')}${t('dashSeasonEndsInSuffix')}<span class="dash-countdown">${pfDashCountdown(end)}</span>`));
+    } else {
+      seasonErrored = true;
+    }
+
+    const bucketEmptyMsg = `<div class="dash-empty">${t('dashBucketEmpty')}</div>`;
+    const todayHtml = bucketRows.today.length ? bucketRows.today.join('') : `<div class="dash-empty">${t('dashNoCurrentSeasonEvent')}</div>`;
+    const weekHtml = bucketRows.week.length ? bucketRows.week.join('') : bucketEmptyMsg;
+    // シーズン情報の取得エラーは「今月」欄の内容を丸ごと差し替えるのではなく先頭に追加する
+    const seasonErrorRow = seasonErrored ? `<div class="dash-empty">${t('dashSeasonLoadFailed')}</div>` : '';
+    const monthHtml = seasonErrorRow + (bucketRows.month.length ? bucketRows.month.join('') : (seasonErrored ? '' : bucketEmptyMsg));
+
+    return `
+      <div class="dash-section"><p class="dash-section-label">${t('dashSectionDaily')}</p>${dailyHtml}</div>
+      <div class="dash-section"><p class="dash-section-label">${t('dashSectionToday')}</p>${todayHtml}</div>
+      <div class="dash-section"><p class="dash-section-label">${t('dashSectionWeek')}</p>${weekHtml}</div>
+      <div class="dash-section"><p class="dash-section-label">${t('dashSectionMonth')}</p>${monthHtml}</div>`;
+  }
+  let pfDashCache = null;
+  let pfDashLoading = null;
+  let pfDashTimer = null;
+  function pfDashStartTimer() {
+    pfDashStopTimer();
+    pfDashTimer = setInterval(() => {
+      if (!pfDashCache) return;
+      const body = document.getElementById('dashBody');
+      if (body) body.innerHTML = pfDashBuildHtml(pfDashCache);
+    }, 1000);
+  }
+  function pfDashStopTimer() {
+    if (pfDashTimer) { clearInterval(pfDashTimer); pfDashTimer = null; }
+  }
+  // 🔄 ダッシュボードの取得データを一度だけ読み込み、pfDashCacheに載せて返す
+  function pfDashEnsureData() {
+    if (pfDashCache) return Promise.resolve(pfDashCache);
+    if (!pfDashLoading) pfDashLoading = pfDashLoadData();
+    return pfDashLoading.then(data => { pfDashCache = data; return data; });
+  }
+
+  // ⌨️ ダッシュボードモーダル内でTab移動の対象になる要素（表示されているものだけ）を取得する
+  function pfDashFocusableEls() {
+    const card = document.getElementById('dashModalCard');
+    const all = card.querySelectorAll(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+    return Array.prototype.filter.call(all, function (el) { return el.offsetParent !== null; });
+  }
+  // Tabキーがモーダルの外（＝背後のページ）に出ていかないよう、最初/最後の要素で折り返す
+  function pfDashTrapKeydown(e) {
+    if (e.key !== 'Tab') return;
+    const focusable = pfDashFocusableEls();
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey) {
+      if (document.activeElement === first || !document.getElementById('dashModalCard').contains(document.activeElement)) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else {
+      if (document.activeElement === last || !document.getElementById('dashModalCard').contains(document.activeElement)) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  }
+  let pfDashPrevFocusEl = null;
+  async function pfDashOpen() {
+    if (document.getElementById('dashModalOverlay').classList.contains('open')) return;
+    closeSidebarMobile();
+    pfSyncReminderUI(); // ブラウザ側の通知許可状態が変わっている可能性があるため開くたびに再同期
+    pfDashPrevFocusEl = document.activeElement;
+    document.getElementById('dashModalOverlay').classList.add('open');
+    const focusable = pfDashFocusableEls();
+    (focusable[0] || document.getElementById('dashModalCard')).focus();
+    document.addEventListener('keydown', pfDashTrapKeydown, true);
+    const body = document.getElementById('dashBody');
+    if (pfDashCache) { body.innerHTML = pfDashBuildHtml(pfDashCache); pfDashStartTimer(); return; }
+    body.innerHTML = `<p class="dash-empty">${t('dashLoading')}</p>`;
+    try {
+      const data = await pfDashEnsureData();
+      body.innerHTML = pfDashBuildHtml(data);
+      pfDashStartTimer();
+    } catch (e) {
+      console.error('pfDashOpen', e);
+      body.innerHTML = `<div class="dash-empty">${t('dashLoadFailed')}</div>`;
+    }
+  }
+  function pfDashClose() {
+    document.getElementById('dashModalOverlay').classList.remove('open');
+    pfDashStopTimer();
+    document.removeEventListener('keydown', pfDashTrapKeydown, true);
+    if (pfDashPrevFocusEl && typeof pfDashPrevFocusEl.focus === 'function') {
+      pfDashPrevFocusEl.focus();
+    }
+    pfDashPrevFocusEl = null;
+  }
+
+  /* ================================================================
+     🔔 ダッシュボードのカウントダウンに対する通知リマインダー（任意オプトイン）。
+     ページを開きっぱなしにしない前提のツールのため、Service Worker等での
+     バックグラウンド配信までは行わず、「ページを開いている間、一定間隔で
+     残り時間をチェックしてNotification APIで知らせる」というシンプルな
+     実装に留めている。通知許可のリクエストは、ユーザーが設定を明示的にONに
+     した時だけ行い、ページ読み込み時に勝手に許可を求めることはしない。
+     （tai-item/profiles.jsの同名サブシステムの移植。キー名は意図的に共有の
+     sky_dash_reminder_* 名前空間のまま――同じ概念の機能なので衝突しない）
+     ================================================================ */
+  const PF_REMINDER_ENABLED_KEY = 'sky_dash_reminder_enabled';
+  const PF_REMINDER_MINUTES_KEY = 'sky_dash_reminder_minutes';
+  const PF_REMINDER_NOTIFIED_KEY = 'sky_dash_reminder_notified_v1';
+  const PF_REMINDER_CHECK_INTERVAL_MS = 60 * 1000;
+
+  function pfReminderEnabled() {
+    return localStorage.getItem(PF_REMINDER_ENABLED_KEY) === '1';
+  }
+  function pfReminderMinutes() {
+    const v = parseInt(localStorage.getItem(PF_REMINDER_MINUTES_KEY), 10);
+    return Number.isFinite(v) && v > 0 ? v : 30;
+  }
+  function pfReminderSaveMinutes(value) {
+    const v = parseInt(value, 10);
+    localStorage.setItem(PF_REMINDER_MINUTES_KEY, String(Number.isFinite(v) && v > 0 ? v : 30));
+    pfReminderCheckNow(); // しきい値を変えたら、既に条件を満たす対象がないか即座に確認する
+  }
+
+  // 通知済みの対象（"id@目標時刻"）を記録し、同じ対象へ何度も通知を送らないようにする。
+  // 古いエントリが無限に溜まらないよう直近200件だけ保持する
+  function pfReminderNotifiedSet() {
+    try {
+      return new Set(JSON.parse(localStorage.getItem(PF_REMINDER_NOTIFIED_KEY) || '[]'));
+    } catch (e) {
+      return new Set();
+    }
+  }
+  function pfReminderMarkNotified(key) {
+    const set = pfReminderNotifiedSet();
+    set.add(key);
+    localStorage.setItem(PF_REMINDER_NOTIFIED_KEY, JSON.stringify([...set].slice(-200)));
+  }
+
+  // 通知本文用：pfDashCountdown()はdash-row内でのHTML表示用（<b>タグ入り）のため、
+  // Notification APIの本文（プレーンテキスト）にはそのまま使えない。同じ計算を
+  // プレーンテキストで返す版をここに持つ。
+  function pfReminderCountdownPlain(target) {
+    const ms = target - new Date();
+    if (ms <= 0) return '00:00:00';
+    const totalSec = Math.floor(ms / 1000);
+    const days = Math.floor(totalSec / 86400);
+    const hh = String(Math.floor((totalSec % 86400) / 3600)).padStart(2, '0');
+    const mm = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
+    const ss = String(totalSec % 60).padStart(2, '0');
+    return days > 0 ? `${days}${t('dashDayUnit')} ${hh}:${mm}:${ss}` : `${hh}:${mm}:${ss}`;
+  }
+
+  // 通知対象にする候補（デイリーリセット／週間リセット／季節終了／期間限定イベント終了）を
+  // pfDashBuildHtml()と同じデータソースから「ラベル＋目標時刻」の配列として抽出する
+  function pfDashReminderTargets(data) {
+    const targets = [
+      { id: 'daily-reset', label: t('dashReminderDailyResetLabel'), target: pfDashNextPacificMidnight() },
+      { id: 'eden-weekly-reset', label: t('dashReminderEdenResetLabel'), target: pfDashNextEdenResetTarget() },
+    ];
+    if (data.season && data.season.name && data.season.endDate) {
+      const end = new Date(data.season.endDate);
+      if (new Date() < end) targets.push({ id: 'season-end', label: dashEventName(data.season.name), target: end });
+    }
+    pfDashActiveScheduledEvents(data.eventSchedule).forEach((ev, i) => {
+      targets.push({ id: `event-${i}-${ev.name}`, label: dashEventName(ev.name), target: new Date(ev.end) });
+    });
+    return targets;
+  }
+
+  async function pfReminderCheckNow() {
+    if (!pfReminderEnabled()) return;
+    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+    let data;
+    try {
+      data = await pfDashEnsureData();
+    } catch (e) { console.error('pfReminderCheckNow', e); return; }
+
+    const thresholdMs = pfReminderMinutes() * 60000;
+    const notified = pfReminderNotifiedSet();
+    pfDashReminderTargets(data).forEach(target => {
+      const msLeft = target.target - new Date();
+      if (msLeft <= 0 || msLeft > thresholdMs) return;
+      // 🕐 分単位に丸めて重複判定を安定させる（他サイトと同じ理由：PT変換の秒未満の
+      // ジッターにより、丸めないと60秒ごとの再チェックで毎回「新規」判定されてしまう）
+      const key = `${target.id}@${Math.round(target.target.getTime() / 60000)}`;
+      if (notified.has(key)) return;
+      pfReminderMarkNotified(key);
+      try {
+        new Notification(t('dashReminderNotifTitle'), {
+          body: t('dashReminderNotifBodyTemplate', { label: target.label, countdown: pfReminderCountdownPlain(target.target) }),
+          tag: key,
+        });
+      } catch (e) { console.error('pfReminderCheckNow notify', e); }
+    });
+  }
+
+  let pfReminderTimer = null;
+  function pfReminderStartTimer() {
+    if (pfReminderTimer) return;
+    pfReminderTimer = setInterval(pfReminderCheckNow, PF_REMINDER_CHECK_INTERVAL_MS);
+  }
+  function pfReminderStopTimer() {
+    if (pfReminderTimer) { clearInterval(pfReminderTimer); pfReminderTimer = null; }
+  }
+
+  // 設定ON時のみ、権限を明示的にリクエストする（ページ読み込み時に勝手には求めない）
+  async function pfReminderToggle(checked) {
+    if (checked) {
+      if (typeof Notification === 'undefined') {
+        localStorage.setItem(PF_REMINDER_ENABLED_KEY, '0');
+        pfSyncReminderUI();
+        return;
+      }
+      let perm = Notification.permission;
+      if (perm === 'default') perm = await Notification.requestPermission();
+      if (perm !== 'granted') {
+        localStorage.setItem(PF_REMINDER_ENABLED_KEY, '0');
+        pfSyncReminderUI();
+        return;
+      }
+      localStorage.setItem(PF_REMINDER_ENABLED_KEY, '1');
+      pfReminderStartTimer();
+      pfReminderCheckNow();
+    } else {
+      localStorage.setItem(PF_REMINDER_ENABLED_KEY, '0');
+      pfReminderStopTimer();
+    }
+    pfSyncReminderUI();
+  }
+
+  // ダッシュボードモーダル内のリマインダーUI（チェックボックス・タイミング選択・状態文言）を
+  // 現在の保存値／通知許可状態に同期させる
+  function pfSyncReminderUI() {
+    const cb = document.getElementById('dashReminderCheckbox');
+    if (!cb) return;
+    const sel = document.getElementById('dashReminderMinutes');
+    const status = document.getElementById('dashReminderStatus');
+    const enabled = pfReminderEnabled();
+    cb.checked = enabled;
+    if (sel) sel.value = String(pfReminderMinutes());
+    if (status) {
+      if (typeof Notification === 'undefined') {
+        status.textContent = t('dashReminderStatusUnsupported');
+      } else if (Notification.permission === 'denied') {
+        status.textContent = t('dashReminderStatusBlocked');
+      } else if (enabled) {
+        status.textContent = t('dashReminderStatusEnabled');
+      } else {
+        status.textContent = '';
+      }
+    }
+  }
+
+  // ページ読み込み時：以前オプトインしていて、かつ既に許可が下りている場合だけ
+  // （＝新たな許可リクエストは絶対に発生させない）自動でチェックを再開する
+  function pfReminderInit() {
+    if (pfReminderEnabled() && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      pfReminderCheckNow();
+      pfReminderStartTimer();
+    }
+  }
+  pfReminderInit();
 </script>
 <script>
 /* Fluid bottom sheet: Pointer Events + spring physics. 1:1 finger tracking, hands
@@ -2890,10 +3110,12 @@
     s.raf = requestAnimationFrame(step);
   }
 
-  // This site's only modal is the display-settings sheet; its background-click
-  // handler (onclick="if(event.target===this) settingsClose()") calls settingsClose().
+  // Each modal sheet's background-click handler (onclick="if(event.target===this) ...Close()")
+  // calls its own close function; this map lets the generic drag/flick engine below call the
+  // right one too when a sheet is dismissed by gesture rather than the close button.
   var CLOSE_FN = {
-    settingsModalOverlay: 'settingsClose'
+    settingsModalOverlay: 'settingsClose',
+    dashModalOverlay: 'pfDashClose'
   };
   function closeOverlay(overlay) {
     var name = CLOSE_FN[overlay.id];
