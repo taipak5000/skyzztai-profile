@@ -915,7 +915,12 @@
   .dash-cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; gap: 2px; }
   .dash-cal-day.is-pad { visibility: hidden; }
   .dash-cal-daynum { font-size: 11px; font-variant-numeric: tabular-nums; color: var(--text); }
-  .dash-cal-day.is-today { background: var(--sky); }
+  /* 「今日」セルの塗りは、テーマで明るさが反転する--skyではなく両テーマ共通の
+     --sky-deep-contrast（白文字用に用意された暗い水色。他の白文字塗り箇所と同じ）を使う。
+     ダークモードの--skyは淡いパステル水色になり、白文字とのコントラストがAA未達（≈2.1:1）
+     になるため。ドットも塗りだけでは背景色によって視認性が変わるため、白い縁取りを足して
+     非テキストのコントラスト(3:1)を確保する。 */
+  .dash-cal-day.is-today { background: var(--sky-deep-contrast); }
   .dash-cal-day.is-today .dash-cal-daynum { color: #fff; font-weight: 700; }
   .dash-cal-dots { display: flex; gap: 2px; height: 4px; }
   .dash-cal-dot { width: 4px; height: 4px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
@@ -923,6 +928,7 @@
   .dash-cal-dot.event { background: #ec4899; }
   .dash-cal-dot.candle { background: #f97316; }
   .dash-cal-dot.revisit { background: #14b8a6; }
+  .dash-cal-day.is-today .dash-cal-dot { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.95); }
   .dash-cal-legend { display: flex; flex-wrap: wrap; gap: 10px; padding: 8px 2px 2px; font-size: 10.5px; color: var(--text-muted); }
   .dash-cal-legend span { display: inline-flex; align-items: center; gap: 4px; }
   .dash-cal-legend .dash-cal-dot { width: 6px; height: 6px; }
@@ -1818,10 +1824,7 @@
     // （許可済み/拒否/未対応）は data-i18n では再描画されないため、ここで明示的に同期する
     if (typeof pfSyncReminderUI === 'function') pfSyncReminderUI();
     if (pfDashCache && document.getElementById('dashModalOverlay').classList.contains('open')) {
-      const dashBodyEl = document.getElementById('dashBody');
-      const calWasOpen = dashBodyEl.querySelector('.dash-calendar')?.open;
-      dashBodyEl.innerHTML = pfDashBuildHtml(pfDashCache);
-      if (calWasOpen) { const cal = dashBodyEl.querySelector('.dash-calendar'); if (cal) cal.open = true; }
+      pfDashRebuildBody(document.getElementById('dashBody'), pfDashCache);
     }
   }
 
@@ -1841,10 +1844,7 @@
     syncSettingsUI();
     if (typeof pfSyncReminderUI === 'function') pfSyncReminderUI();
     if (pfDashCache && document.getElementById('dashModalOverlay').classList.contains('open')) {
-      const dashBodyEl = document.getElementById('dashBody');
-      const calWasOpen = dashBodyEl.querySelector('.dash-calendar')?.open;
-      dashBodyEl.innerHTML = pfDashBuildHtml(pfDashCache);
-      if (calWasOpen) { const cal = dashBodyEl.querySelector('.dash-calendar'); if (cal) cal.open = true; }
+      pfDashRebuildBody(document.getElementById('dashBody'), pfDashCache);
     }
   }
 
@@ -2807,9 +2807,10 @@
       const key = `${year}-${month}-${d}`;
       const cats = marks.get(key);
       const isToday = key === todayKey;
-      const dotsHtml = cats
-        ? `<span class="dash-cal-dots">${CAT_ORDER.filter(c => cats.has(c)).map(c => `<i class="dash-cal-dot ${c}"></i>`).join('')}</span>`
-        : '';
+      // ドットが0個の日でも.dash-cal-dots自体は常に描画する（中身が空でも高さ4pxを確保）。
+      // そうしないとflexの中央寄せが1要素(数字のみ)と2要素(数字+ドット行)とで変わってしまい、
+      // ドットがある日とない日とで数字の縦位置がズレる。
+      const dotsHtml = `<span class="dash-cal-dots">${cats ? CAT_ORDER.filter(c => cats.has(c)).map(c => `<i class="dash-cal-dot ${c}"></i>`).join('') : ''}</span>`;
       cellsHtml += `<div class="dash-cal-day${isToday ? ' is-today' : ''}"><span class="dash-cal-daynum">${d}</span>${dotsHtml}</div>`;
     }
     const monthLabel = LANG === 'en'
@@ -2950,21 +2951,36 @@
   let pfDashCache = null;
   let pfDashLoading = null;
   let pfDashTimer = null;
+  // 🔁 #dashBody のinnerHTMLを安全に差し替える共通処理。
+  // カレンダーの開閉(<details>)はカウントダウンと違って毎秒更新する必要がないが、
+  // innerHTMLごと差し替えるとdetails要素が作り直され、開いていた状態が毎秒
+  // 勝手に閉じてしまう。差し替え前に開閉状態を読み、差し替え後に復元する。
+  // 同様に、フォーカスが#dashBody内（例：Tabでカレンダーのsummaryへフォーカスした直後）
+  // にあった場合も、差し替え後は新しく作られた別のDOMノードになるためフォーカスが
+  // document.bodyへ落ちてしまう＝フォーカストラップの外に出てしまう。開閉状態と同じ要領で
+  // 差し替え前にフォーカス位置を読み、差し替え後に同じ要素へフォーカスを復元する。
+  function pfDashRebuildBody(body, data) {
+    const calWasOpen = body.querySelector('.dash-calendar')?.open;
+    const active = document.activeElement;
+    const focusWasOnCalSummary = !!active && body.contains(active) &&
+      active.classList && active.classList.contains('dash-calendar-summary');
+    body.innerHTML = pfDashBuildHtml(data);
+    if (calWasOpen) {
+      const cal = body.querySelector('.dash-calendar');
+      if (cal) cal.open = true;
+    }
+    if (focusWasOnCalSummary) {
+      const summary = body.querySelector('.dash-calendar-summary');
+      if (summary) summary.focus();
+    }
+  }
   function pfDashStartTimer() {
     pfDashStopTimer();
     pfDashTimer = setInterval(() => {
       if (!pfDashCache) return;
       const body = document.getElementById('dashBody');
       if (!body) return;
-      // カレンダーの開閉(<details>)はカウントダウンと違って毎秒更新する必要がないが、
-      // innerHTMLごと差し替えるとdetails要素が作り直され、開いていた状態が毎秒
-      // 勝手に閉じてしまう。差し替え前に開閉状態を読み、差し替え後に復元する。
-      const calWasOpen = body.querySelector('.dash-calendar')?.open;
-      body.innerHTML = pfDashBuildHtml(pfDashCache);
-      if (calWasOpen) {
-        const cal = body.querySelector('.dash-calendar');
-        if (cal) cal.open = true;
-      }
+      pfDashRebuildBody(body, pfDashCache);
     }, 1000);
   }
   function pfDashStopTimer() {
