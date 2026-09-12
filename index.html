@@ -912,7 +912,11 @@
     padding: 10px 11px; background: var(--row); border-radius: 0 0 10px 10px;
   }
   .dash-cal-dow { text-align: center; font-size: 10px; font-weight: 700; color: var(--text-muted); padding-bottom: 4px; }
-  .dash-cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; gap: 2px; }
+  /* max-width+justify-self: 表示設定モーダル/ダッシュボードのシート自体は
+     >=560pxで360pxにキャップされるが、375~559pxの間はシートが画面幅いっぱいに
+     広がるため、そのままだとセルが67px超まで膨張してしまう（実測済み）。
+     セル自体にキャップを掛けて風船化を防ぎ、余った分は列内で中央寄せする。 */
+  .dash-cal-day { aspect-ratio: 1; max-width: 46px; width: 100%; justify-self: center; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; gap: 2px; }
   .dash-cal-day.is-pad { visibility: hidden; }
   .dash-cal-daynum { font-size: 11px; font-variant-numeric: tabular-nums; color: var(--text); }
   /* 「今日」セルの塗りは、テーマで明るさが反転する--skyではなく両テーマ共通の
@@ -924,11 +928,24 @@
   .dash-cal-day.is-today .dash-cal-daynum { color: #fff; font-weight: 700; }
   .dash-cal-dots { display: flex; gap: 2px; height: 4px; }
   .dash-cal-dot { width: 4px; height: 4px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-  .dash-cal-dot.season { background: #eab308; }
+  /* ライトモードの通常セル背景(--row: #F1F7FD)に対して、素の#eab308/#f97316/#14b8a6は
+     WCAG 1.4.11の非テキストコントラスト3:1を満たさない（自前でrelative luminanceを
+     計算して実測：季節1.78:1、キャンドル2.6:1、再訪1.8xx台。events(#ec4899)のみ3.27:1で
+     ぎりぎり達成）。ダークモードの--row(#101D32)に対しては元の色のままで6~9:1と十分な
+     ので、ここではライト側だけ濃い/彩度の高いバリアントに差し替え、ダークモードは
+     [data-theme="dark"]側で元の色に戻す。 */
+  .dash-cal-dot.season { background: #b45309; }
   .dash-cal-dot.event { background: #ec4899; }
-  .dash-cal-dot.candle { background: #f97316; }
-  .dash-cal-dot.revisit { background: #14b8a6; }
+  .dash-cal-dot.candle { background: #c2410c; }
+  .dash-cal-dot.revisit { background: #0f766e; }
+  [data-theme="dark"] .dash-cal-dot.season { background: #eab308; }
+  [data-theme="dark"] .dash-cal-dot.candle { background: #f97316; }
+  [data-theme="dark"] .dash-cal-dot.revisit { background: #14b8a6; }
   .dash-cal-day.is-today .dash-cal-dot { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.95); }
+  /* 今日セルで複数カテゴリが重なると、隣接ドット同士のリング(1px)が触れ合ってしまい
+     白い塊に見えて何個・どの色かが判別できなくなる回帰があったため、今日セルのドットだけ
+     間隔を広げてリング同士が重ならない・接触しないようにする。 */
+  .dash-cal-day.is-today .dash-cal-dots { gap: 5px; }
   .dash-cal-legend { display: flex; flex-wrap: wrap; gap: 10px; padding: 8px 2px 2px; font-size: 10.5px; color: var(--text-muted); }
   .dash-cal-legend span { display: inline-flex; align-items: center; gap: 4px; }
   .dash-cal-legend .dash-cal-dot { width: 6px; height: 6px; }
@@ -2971,7 +2988,11 @@
     }
     if (focusWasOnCalSummary) {
       const summary = body.querySelector('.dash-calendar-summary');
-      if (summary) summary.focus();
+      // { preventScroll: true }: 素の focus() は対象が見えていないとスクロールして
+      // 表示させてしまう。ダッシュボード本文を下にスクロールして今週/今月やリマインダー
+      // 設定を見ている間も1秒ごとの再描画が走るため、これが無いと毎秒スクロール位置が
+      // カレンダーの位置まで強制的に巻き戻ってしまう。
+      if (summary) summary.focus({ preventScroll: true });
     }
   }
   function pfDashStartTimer() {
@@ -3031,7 +3052,11 @@
     (focusable[0] || document.getElementById('dashModalCard')).focus();
     document.addEventListener('keydown', pfDashTrapKeydown, true);
     const body = document.getElementById('dashBody');
-    if (pfDashCache) { body.innerHTML = pfDashBuildHtml(pfDashCache); pfDashStartTimer(); return; }
+    // 🐛 以前はここで body.innerHTML = pfDashBuildHtml(...) を直接呼んでおり、タイマー/
+    // 言語切替と違って開閉状態・フォーカスを保持していなかった。カレンダーを開いた状態で
+    // ダッシュボードを閉じて再度開くと、毎回折りたたみ状態にリセットされてしまう不具合。
+    // 他の再描画箇所と同じ共通ヘルパーに統一する。
+    if (pfDashCache) { pfDashRebuildBody(body, pfDashCache); pfDashStartTimer(); return; }
     body.innerHTML = `<p class="dash-empty">${t('dashLoading')}</p>`;
     try {
       const data = await pfDashEnsureData();
@@ -3357,7 +3382,10 @@
   }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'], subtree: true, attributeOldValue: true });
 
   function isInteractive(el) {
-    return !!(el && el.closest && el.closest('input, select, textarea, button, a, label, [contenteditable], [role="button"], input[type="range"]'));
+    // 'summary': カレンダーの<details>開閉トグルはネイティブ<summary>で role="button" も
+    // 付けていないため、これが無いと数px動く普通のタップがドラッグ扱いされてしまい、
+    // カレンダーが開閉できない・シート自体が閉じてしまうことがあった。
+    return !!(el && el.closest && el.closest('input, select, textarea, button, a, label, [contenteditable], [role="button"], input[type="range"], summary'));
   }
   document.addEventListener('pointerdown', function (e) {
     if (REDUCE_MOTION.matches) return;
