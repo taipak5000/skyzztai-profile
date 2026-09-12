@@ -2050,9 +2050,14 @@
     // ショートカットが押された場合。ここでガードしないとsettingsPrevFocusElが
     // モーダル内の要素で上書きされてしまい、閉じたときにフォーカスの戻し先を見失う）
     if (document.getElementById('settingsModalOverlay').classList.contains('open')) return;
-    // 🧭 モバイル版「他のツール」ドロワーが開いたままだと2つのオーバーレイが重なってしまうため、
-    // 表示設定モーダルを開く前に閉じておく（closeSidebarMobile()は未オープン時は何もしない安全な関数）
+    // 🧭 他のオーバーレイ（モバイル版「他のツール」ドロワー／ダッシュボードモーダル）が
+    // 開いたままだとオーバーレイ同士が重なってしまうため、表示設定モーダルを開く前に
+    // 閉じておく（closeSidebarMobile()/pfDashClose()は未オープン時は何もしない安全な関数）。
+    // 「?」ショートカットはダッシュボードが開いているか確認せず呼ばれるため、ここで
+    // ガードしないと両モーダルが同時にopenになり、ダッシュボードの1秒ごとの再描画で
+    // 相手側のトリガー参照が古くなる／Tabトラップ同士が競合する不具合につながる。
     closeSidebarMobile();
+    if (document.getElementById('dashModalOverlay').classList.contains('open')) pfDashClose();
     syncSettingsUI();
     settingsPrevFocusEl = document.activeElement;
     document.getElementById('settingsModalOverlay').classList.add('open');
@@ -2064,8 +2069,10 @@
   function settingsClose() {
     document.getElementById('settingsModalOverlay').classList.remove('open');
     document.removeEventListener('keydown', settingsTrapKeydown, true);
-    // フォーカスを開く前の要素（トリガー）に戻す
-    if (settingsPrevFocusEl && typeof settingsPrevFocusEl.focus === 'function') {
+    // フォーカスを開く前の要素（トリガー）に戻す。document.contains()は、そのトリガーが
+    // 別のオーバーレイの再描画等で既にDOMから失われていた場合に備えた安全策
+    // （通常は上のオーバーレイ相互排他ガードにより発生しないはずだが、念のため）。
+    if (settingsPrevFocusEl && typeof settingsPrevFocusEl.focus === 'function' && document.contains(settingsPrevFocusEl)) {
       settingsPrevFocusEl.focus();
     }
     settingsPrevFocusEl = null;
@@ -2114,9 +2121,11 @@
     // 既に開いている場合は何もしない（ここでガードしないとsidebarPrevFocusElが
     // ドロワー内の要素で上書きされてしまい、閉じたときにフォーカスの戻し先を見失う）
     if (document.getElementById('sidebar').classList.contains('sidebar-open')) return;
-    // 🧭 表示設定モーダルが開いたままだとオーバーレイ同士が重なってしまうため、
-    // ドロワーを開く前に閉じておく（settingsClose()は未オープン時は何もしない安全な関数）
+    // 🧭 表示設定モーダル／ダッシュボードモーダルが開いたままだとオーバーレイ同士が
+    // 重なってしまうため、ドロワーを開く前に閉じておく（settingsClose()/pfDashClose()は
+    // 未オープン時は何もしない安全な関数）
     if (document.getElementById('settingsModalOverlay').classList.contains('open')) settingsClose();
+    if (document.getElementById('dashModalOverlay').classList.contains('open')) pfDashClose();
     sidebarPrevFocusEl = document.activeElement;
     document.getElementById('sidebar').classList.add('sidebar-open');
     document.getElementById('sidebarOverlay').classList.add('show');
@@ -2129,8 +2138,10 @@
     document.getElementById('sidebar').classList.remove('sidebar-open');
     document.getElementById('sidebarOverlay').classList.remove('show');
     document.removeEventListener('keydown', sidebarTrapKeydown, true);
-    // フォーカスを開く前の要素（トリガー）に戻す
-    if (sidebarPrevFocusEl && typeof sidebarPrevFocusEl.focus === 'function') {
+    // フォーカスを開く前の要素（トリガー）に戻す。document.contains()は、そのトリガーが
+    // 既にDOMから失われていた場合に備えた安全策（通常は上のオーバーレイ相互排他ガード
+    // により発生しないはずだが、念のため）。
+    if (sidebarPrevFocusEl && typeof sidebarPrevFocusEl.focus === 'function' && document.contains(sidebarPrevFocusEl)) {
       sidebarPrevFocusEl.focus();
     }
     sidebarPrevFocusEl = null;
@@ -3068,7 +3079,11 @@
   let pfDashPrevFocusEl = null;
   async function pfDashOpen() {
     if (document.getElementById('dashModalOverlay').classList.contains('open')) return;
+    // 🧭 他のオーバーレイ（モバイル版ドロワー／表示設定モーダル）が開いたままだと
+    // オーバーレイ同士が重なってしまうため、ダッシュボードを開く前に閉じておく
+    // （settingsClose()と対になるガード。settingsOpen()側のコメント参照）。
     closeSidebarMobile();
+    if (document.getElementById('settingsModalOverlay').classList.contains('open')) settingsClose();
     pfSyncReminderUI(); // ブラウザ側の通知許可状態が変わっている可能性があるため開くたびに再同期
     pfDashPrevFocusEl = document.activeElement;
     document.getElementById('dashModalOverlay').classList.add('open');
@@ -3101,7 +3116,9 @@
     document.getElementById('dashModalOverlay').classList.remove('open');
     pfDashStopTimer();
     document.removeEventListener('keydown', pfDashTrapKeydown, true);
-    if (pfDashPrevFocusEl && typeof pfDashPrevFocusEl.focus === 'function') {
+    // document.contains()は、トリガーが既にDOMから失われていた場合に備えた安全策
+    // （通常は上のオーバーレイ相互排他ガードにより発生しないはずだが、念のため）。
+    if (pfDashPrevFocusEl && typeof pfDashPrevFocusEl.focus === 'function' && document.contains(pfDashPrevFocusEl)) {
       pfDashPrevFocusEl.focus();
     }
     pfDashPrevFocusEl = null;
