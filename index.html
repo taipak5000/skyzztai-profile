@@ -672,7 +672,8 @@
     background: var(--row);
   }
 
-  .more-info-summary:focus-visible {
+  .more-info-summary:focus-visible,
+  .dash-calendar-summary:focus-visible {
     outline: 2px solid var(--sky);
     outline-offset: 2px;
   }
@@ -2824,6 +2825,17 @@
     const marks = pfDashCalendarMarks(data, year, month);
     const todayKey = `${year}-${month}-${now.getDate()}`;
     const CAT_ORDER = ['season', 'event', 'candle', 'revisit'];
+    // 🅼 各日のカテゴリは4px丸ドットの色だけで示されており、スクリーンリーダー利用者や
+    // ドットの色が区別しづらい利用者には情報が一切伝わらない（凡例と違いテキストが無い）。
+    // 凡例と同じラベル文言を使って日付+カテゴリの説明文を組み立て、セルのtitle/aria-labelに
+    // 付与する（見た目は変えず、支援技術・マウスホバー向けのテキスト等価物を追加するだけ）。
+    const CAT_LABELS = {
+      season: t('dashCalLegendSeason'), event: t('dashCalLegendEvent'),
+      candle: t('dashCalLegendCandle'), revisit: t('dashCalLegendRevisit'),
+    };
+    const monthNameOnly = LANG === 'en'
+      ? new Intl.DateTimeFormat('en-US', { month: 'long' }).format(now)
+      : `${month + 1}月`;
 
     const dow = LANG === 'en' ? ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'] : ['日', '月', '火', '水', '木', '金', '土'];
     let cellsHtml = '';
@@ -2832,11 +2844,15 @@
       const key = `${year}-${month}-${d}`;
       const cats = marks.get(key);
       const isToday = key === todayKey;
+      const catList = cats ? CAT_ORDER.filter(c => cats.has(c)).map(c => CAT_LABELS[c]) : [];
+      const dayLabel = (LANG === 'en' ? `${monthNameOnly} ${d}` : `${monthNameOnly}${d}日`)
+        + (catList.length ? `: ${catList.join(', ')}` : '');
+      const dayLabelAttr = escapeHtml(dayLabel);
       // ドットが0個の日でも.dash-cal-dots自体は常に描画する（中身が空でも高さ4pxを確保）。
       // そうしないとflexの中央寄せが1要素(数字のみ)と2要素(数字+ドット行)とで変わってしまい、
       // ドットがある日とない日とで数字の縦位置がズレる。
       const dotsHtml = `<span class="dash-cal-dots">${cats ? CAT_ORDER.filter(c => cats.has(c)).map(c => `<i class="dash-cal-dot ${c}"></i>`).join('') : ''}</span>`;
-      cellsHtml += `<div class="dash-cal-day${isToday ? ' is-today' : ''}"><span class="dash-cal-daynum">${d}</span>${dotsHtml}</div>`;
+      cellsHtml += `<div class="dash-cal-day${isToday ? ' is-today' : ''}" title="${dayLabelAttr}" aria-label="${dayLabelAttr}"><span class="dash-cal-daynum">${d}</span>${dotsHtml}</div>`;
     }
     const monthLabel = LANG === 'en'
       ? new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(now)
@@ -3068,6 +3084,12 @@
     body.innerHTML = `<p class="dash-empty">${t('dashLoading')}</p>`;
     try {
       const data = await pfDashEnsureData();
+      // 🐛 このawait待ちの間にダッシュボードがすぐ閉じられている可能性がある。
+      // 閉じられていたら描画・タイマー起動をスキップしないと、閉じたはずの
+      // カウントダウンタイマーがバックグラウンドで永遠に動き続け、1秒ごとに
+      // 存在しない#dashBodyのHTMLを再構築し続けてしまう（次にダッシュボードを
+      // 開いたときにpfDashStartTimer()が呼ばれるまで止まらない）。
+      if (!document.getElementById('dashModalOverlay').classList.contains('open')) return;
       body.innerHTML = pfDashBuildHtml(data);
       pfDashStartTimer();
     } catch (e) {
