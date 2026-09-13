@@ -342,14 +342,18 @@
   /* 精度に不安がある新機能であることを示す小さな注記（例: 楽譜づくり） */
   .tool-badge-test { font-size: 9px; font-weight: 700; color: var(--text); opacity: 0.55; text-transform: uppercase; letter-spacing: 0.3px; margin-right: 5px; }
 
-  /* ---------- 🧭 下部クイックアクセスドック（姉妹サイト共通：fixed・z-index:90） ---------- */
+  /* ---------- 🧭 下部クイックアクセスドック（姉妹サイト共通：fixed） ---------- */
   .site-dock {
     display: flex;
     position: fixed;
     left: 0;
     right: 0;
     bottom: 0;
-    z-index: 90;
+    /* 🩹 z-index: オーバーレイ背景（.sidebar-overlay:499 / .settings-modal-overlay:1000）より
+       低いままだと、オーバーレイが開いている間ドックがクリックを奪われ、別のドックアイコンを
+       タップしても「現在のオーバーレイを閉じるだけ」になり、意図したオーバーレイへの一発切り替え
+       ができなかった。ドックは常にクリック可能であるべきなので、全オーバーレイ背景より上に置く。 */
+    z-index: 1001;
     padding: 6px 10px calc(8px + env(safe-area-inset-bottom));
     background: var(--panel);
     backdrop-filter: blur(10px);
@@ -2156,11 +2160,17 @@
   // のはユーザーの期待に沿う、既存のクリックアウトサイドで閉じる挙動と同種の基本UXのため）
   // かつ sky_shortcuts_enabled の対象外。?とdは、テキスト入力中は通常の文字入力として使える
   // ようにガードする。
+  const PF_NON_TEXT_INPUT_TYPES = ['checkbox', 'radio', 'range', 'color', 'button', 'submit', 'reset', 'file', 'image', 'hidden'];
   document.addEventListener('keydown', function (e) {
     if (e.repeat) return;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const targetEl = e.target;
-    const isTyping = targetEl && (targetEl.tagName === 'INPUT' || targetEl.tagName === 'TEXTAREA' || targetEl.tagName === 'SELECT' || targetEl.isContentEditable);
+    // 🩹 input要素はtypeを問わず一律「入力中」扱いにしていたため、type=colorのような
+    // 実際には'?'や'd'をリテラル文字として受け付けない入力（チェックボックス/ラジオ/
+    // レンジ/カラー/ボタン等）にフォーカスがあるだけでショートカットが死んでいた。
+    // 実際に文字を打ち込めるtypeだけを「入力中」とみなす。
+    const isTextInputEl = targetEl && targetEl.tagName === 'INPUT' && PF_NON_TEXT_INPUT_TYPES.indexOf((targetEl.type || '').toLowerCase()) === -1;
+    const isTyping = targetEl && (isTextInputEl || targetEl.tagName === 'TEXTAREA' || targetEl.tagName === 'SELECT' || targetEl.isContentEditable);
 
     if (e.key === 'Escape') {
       closeTopmostOpenModal();
