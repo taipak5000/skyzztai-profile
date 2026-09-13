@@ -1181,10 +1181,11 @@
   @media (min-width: 560px) {
     .settings-modal-card { max-width: 360px; }
     /* ダッシュボードは表示設定モーダルと同じ.settings-modal-cardを流用しているが、
-       表示設定専用に絞った360px上限を継承してしまうため、他の姉妹サイトのダッシュボードと
-       同じ幅の広いボトムシート（このサイトの基準値600px）に戻すID指定の上書き。 */
-    #dashModalCard { max-width: 600px; }
+       表示設定専用に絞った360px上限を継承してしまうため、姉妹サイト共通の基準値
+       （item/.wrapと同じ720px、850px以上で960px）に戻すID指定の上書き。 */
+    #dashModalCard { max-width: 720px; }
   }
+  @media (min-width: 850px) { #dashModalCard { max-width: 960px; } }
   .settings-modal-card.is-dragging, .settings-modal-card.js-anim { transition: none; animation: none; cursor: grabbing; user-select: none; }
   .settings-modal-card::before {
     content: ''; position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
@@ -1998,140 +1999,124 @@
       langEnBtn.setAttribute('aria-pressed', LANG === 'en' ? 'true' : 'false');
     }
   }
-  // ⌨️ モーダル内でのフォーカストラップ用：開いた時点でフォーカスされていた要素
-  // （＝トリガー。⚙️ボタンのクリック or「?」ショートカット）を覚えておき、
-  // 閉じるときにそこへフォーカスを戻す。
-  let settingsPrevFocusEl = null;
+  /* ================================================================
+     ⌨️ モーダル内でのフォーカストラップ（Tab/Shift+Tabを開いているモーダル内に閉じ込め、
+     閉じたときは開く前にフォーカスされていた要素＝トリガーへ戻す）。表示設定／
+     ダッシュボード／「他のツール」ドロワーの3つが対象で、開いた順に積むスタック
+     （trapStack）に共通化している（wingsのtrapPush/trapPopと同じパターン。姉妹サイト
+     全体で同じ実装に揃えることで、将来モーダルが増えてもpush/popを足すだけで済む）。
+     Tabトラップの対象は常にスタック最上段（＝一番手前に開いているモーダル）だけで
+     よいので、開閉のたびにpush/popするだけでネストにも自動的に対応できる。
+     ================================================================ */
+  const trapStack = [];
+  let trapListenerAttached = false;
 
   // モーダル内でTab移動の対象になる要素（表示されているものだけ）を取得する
-  function settingsFocusableEls() {
-    const card = document.getElementById('settingsModalCard');
-    const all = card.querySelectorAll(
+  function trapFocusableEls(container) {
+    const all = container.querySelectorAll(
       'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
     );
     return Array.prototype.filter.call(all, function (el) { return el.offsetParent !== null; });
   }
 
-  // Tabキーがモーダルの外（＝背後のページ）に出ていかないよう、最初/最後の要素で折り返す
-  function settingsTrapKeydown(e) {
-    if (e.key !== 'Tab') return;
-    const focusable = settingsFocusableEls();
+  // Tabキーがモーダルの外（＝背後のページ）に出ていかないよう、スタック最上段の
+  // カードの先頭/末尾要素で折り返す
+  function trapKeydown(e) {
+    if (e.key !== 'Tab' || !trapStack.length) return;
+    const card = trapStack[trapStack.length - 1].card;
+    const focusable = trapFocusableEls(card);
     if (!focusable.length) return;
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
     if (e.shiftKey) {
-      if (document.activeElement === first || !document.getElementById('settingsModalCard').contains(document.activeElement)) {
+      if (document.activeElement === first || !card.contains(document.activeElement)) {
         e.preventDefault();
         last.focus();
       }
     } else {
-      if (document.activeElement === last || !document.getElementById('settingsModalCard').contains(document.activeElement)) {
+      if (document.activeElement === last || !card.contains(document.activeElement)) {
         e.preventDefault();
         first.focus();
       }
     }
   }
 
+  // overlayIdをキーにカードへフォーカスを移し、Tabトラップのスタックに積む。同じ
+  // overlayIdが既にスタックにある（＝多重呼び出し）場合は何もしない
+  // （トリガー参照の上書き防止。各open関数側のガードと同じ考え方）。
+  function trapPush(overlayId, card) {
+    if (!card || trapStack.some(function (s) { return s.overlayId === overlayId; })) return;
+    trapStack.push({ overlayId: overlayId, card: card, prevFocusEl: document.activeElement });
+    if (!trapListenerAttached) {
+      document.addEventListener('keydown', trapKeydown, true);
+      trapListenerAttached = true;
+    }
+    const focusable = trapFocusableEls(card);
+    (focusable[0] || card).focus();
+  }
+
+  // overlayIdをスタックから取り除き、そのモーダルを開く前にフォーカスしていた要素
+  // （トリガー）へフォーカスを戻す。document.contains()は、トリガーが別のオーバーレイの
+  // 再描画等で既にDOMから失われていた場合に備えた安全策。
+  function trapPop(overlayId) {
+    const idx = trapStack.findIndex(function (s) { return s.overlayId === overlayId; });
+    if (idx === -1) return;
+    const entry = trapStack.splice(idx, 1)[0];
+    if (!trapStack.length && trapListenerAttached) {
+      document.removeEventListener('keydown', trapKeydown, true);
+      trapListenerAttached = false;
+    }
+    if (entry.prevFocusEl && typeof entry.prevFocusEl.focus === 'function' && document.contains(entry.prevFocusEl)) {
+      entry.prevFocusEl.focus();
+    }
+  }
+
+  // 🧭 表示設定／ダッシュボード／「他のツール」ドロワーの3つは、下部ドックや「?」
+  // ショートカットからいつでも独立して開けるため、他のどれかが開いたままもう1つを開くと
+  // オーバーレイ同士が重なってしまう。開く前に、開こうとしているもの以外を閉じておく
+  // （各close関数は未オープン時は何もしない安全な関数）。
+  function pfCloseOtherTopLevelOverlays(exceptId) {
+    if (exceptId !== 'settingsModalOverlay' && document.getElementById('settingsModalOverlay').classList.contains('open')) settingsClose();
+    if (exceptId !== 'dashModalOverlay' && document.getElementById('dashModalOverlay').classList.contains('open')) pfDashClose();
+    if (exceptId !== 'sidebar' && document.getElementById('sidebar').classList.contains('sidebar-open')) closeSidebarMobile();
+  }
+
   function settingsOpen() {
     // 既に開いている場合は何もしない（例：モーダルを開いた状態でもう一度「?」
-    // ショートカットが押された場合。ここでガードしないとsettingsPrevFocusElが
+    // ショートカットが押された場合。ここでガードしないとtrapPush側のトリガー参照が
     // モーダル内の要素で上書きされてしまい、閉じたときにフォーカスの戻し先を見失う）
     if (document.getElementById('settingsModalOverlay').classList.contains('open')) return;
-    // 🧭 他のオーバーレイ（モバイル版「他のツール」ドロワー／ダッシュボードモーダル）が
-    // 開いたままだとオーバーレイ同士が重なってしまうため、表示設定モーダルを開く前に
-    // 閉じておく（closeSidebarMobile()/pfDashClose()は未オープン時は何もしない安全な関数）。
-    // 「?」ショートカットはダッシュボードが開いているか確認せず呼ばれるため、ここで
-    // ガードしないと両モーダルが同時にopenになり、ダッシュボードの1秒ごとの再描画で
-    // 相手側のトリガー参照が古くなる／Tabトラップ同士が競合する不具合につながる。
-    closeSidebarMobile();
-    if (document.getElementById('dashModalOverlay').classList.contains('open')) pfDashClose();
+    pfCloseOtherTopLevelOverlays('settingsModalOverlay');
     syncSettingsUI();
-    settingsPrevFocusEl = document.activeElement;
     document.getElementById('settingsModalOverlay').classList.add('open');
-    // フォーカスをモーダル内に移す（最初の操作可能な要素へ。無ければモーダル自体へ）
-    const focusable = settingsFocusableEls();
-    (focusable[0] || document.getElementById('settingsModalCard')).focus();
-    document.addEventListener('keydown', settingsTrapKeydown, true);
+    trapPush('settingsModalOverlay', document.getElementById('settingsModalCard'));
   }
   function settingsClose() {
     document.getElementById('settingsModalOverlay').classList.remove('open');
-    document.removeEventListener('keydown', settingsTrapKeydown, true);
-    // フォーカスを開く前の要素（トリガー）に戻す。document.contains()は、そのトリガーが
-    // 別のオーバーレイの再描画等で既にDOMから失われていた場合に備えた安全策
-    // （通常は上のオーバーレイ相互排他ガードにより発生しないはずだが、念のため）。
-    if (settingsPrevFocusEl && typeof settingsPrevFocusEl.focus === 'function' && document.contains(settingsPrevFocusEl)) {
-      settingsPrevFocusEl.focus();
-    }
-    settingsPrevFocusEl = null;
+    trapPop('settingsModalOverlay');
   }
 
   /* ================================================================
      🧭 ヘッダー／下部ドック共通：「他のツール」ドロワーの開閉
      幅を問わず常にフルスクリーンオーバーレイとして開く（関連ツール一覧の
      常設サイドバーは廃止済みのため、ここが唯一の表示経路）。
-     表示設定モーダル（settingsOpen/settingsClose/settingsTrapKeydown）と同様、
+     表示設定モーダル（settingsOpen/settingsClose）と同様、trapPush/trapPop経由で
      開いている間はTabキーをドロワー内に閉じ込め、閉じたときは開く前に
      フォーカスしていた要素（トリガー）に戻す。
      ================================================================ */
-  let sidebarPrevFocusEl = null;
-
-  // ドロワー内でTab移動の対象になる要素（表示されているものだけ）を取得する
-  function sidebarFocusableEls() {
-    const aside = document.getElementById('sidebar');
-    const all = aside.querySelectorAll(
-      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-    );
-    return Array.prototype.filter.call(all, function (el) { return el.offsetParent !== null; });
-  }
-
-  // Tabキーがドロワーの外（＝背後のページ）に出ていかないよう、最初/最後の要素で折り返す
-  function sidebarTrapKeydown(e) {
-    if (e.key !== 'Tab') return;
-    const focusable = sidebarFocusableEls();
-    if (!focusable.length) return;
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (e.shiftKey) {
-      if (document.activeElement === first || !document.getElementById('sidebar').contains(document.activeElement)) {
-        e.preventDefault();
-        last.focus();
-      }
-    } else {
-      if (document.activeElement === last || !document.getElementById('sidebar').contains(document.activeElement)) {
-        e.preventDefault();
-        first.focus();
-      }
-    }
-  }
-
   function openSidebarMobile() {
-    // 既に開いている場合は何もしない（ここでガードしないとsidebarPrevFocusElが
+    // 既に開いている場合は何もしない（ここでガードしないとtrapPush側のトリガー参照が
     // ドロワー内の要素で上書きされてしまい、閉じたときにフォーカスの戻し先を見失う）
     if (document.getElementById('sidebar').classList.contains('sidebar-open')) return;
-    // 🧭 表示設定モーダル／ダッシュボードモーダルが開いたままだとオーバーレイ同士が
-    // 重なってしまうため、ドロワーを開く前に閉じておく（settingsClose()/pfDashClose()は
-    // 未オープン時は何もしない安全な関数）
-    if (document.getElementById('settingsModalOverlay').classList.contains('open')) settingsClose();
-    if (document.getElementById('dashModalOverlay').classList.contains('open')) pfDashClose();
-    sidebarPrevFocusEl = document.activeElement;
+    pfCloseOtherTopLevelOverlays('sidebar');
     document.getElementById('sidebar').classList.add('sidebar-open');
     document.getElementById('sidebarOverlay').classList.add('show');
-    // フォーカスをドロワー内に移す（最初の操作可能な要素へ。無ければドロワー自体へ）
-    const focusable = sidebarFocusableEls();
-    (focusable[0] || document.getElementById('sidebar')).focus();
-    document.addEventListener('keydown', sidebarTrapKeydown, true);
+    trapPush('sidebar', document.getElementById('sidebar'));
   }
   function closeSidebarMobile() {
     document.getElementById('sidebar').classList.remove('sidebar-open');
     document.getElementById('sidebarOverlay').classList.remove('show');
-    document.removeEventListener('keydown', sidebarTrapKeydown, true);
-    // フォーカスを開く前の要素（トリガー）に戻す。document.contains()は、そのトリガーが
-    // 既にDOMから失われていた場合に備えた安全策（通常は上のオーバーレイ相互排他ガード
-    // により発生しないはずだが、念のため）。
-    if (sidebarPrevFocusEl && typeof sidebarPrevFocusEl.focus === 'function' && document.contains(sidebarPrevFocusEl)) {
-      sidebarPrevFocusEl.focus();
-    }
-    sidebarPrevFocusEl = null;
+    trapPop('sidebar');
   }
 
   /* ================================================================
@@ -3090,47 +3075,15 @@
     return pfDashLoading.then(data => { pfDashCache = data; return data; });
   }
 
-  // ⌨️ ダッシュボードモーダル内でTab移動の対象になる要素（表示されているものだけ）を取得する
-  function pfDashFocusableEls() {
-    const card = document.getElementById('dashModalCard');
-    const all = card.querySelectorAll(
-      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-    );
-    return Array.prototype.filter.call(all, function (el) { return el.offsetParent !== null; });
-  }
-  // Tabキーがモーダルの外（＝背後のページ）に出ていかないよう、最初/最後の要素で折り返す
-  function pfDashTrapKeydown(e) {
-    if (e.key !== 'Tab') return;
-    const focusable = pfDashFocusableEls();
-    if (!focusable.length) return;
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (e.shiftKey) {
-      if (document.activeElement === first || !document.getElementById('dashModalCard').contains(document.activeElement)) {
-        e.preventDefault();
-        last.focus();
-      }
-    } else {
-      if (document.activeElement === last || !document.getElementById('dashModalCard').contains(document.activeElement)) {
-        e.preventDefault();
-        first.focus();
-      }
-    }
-  }
-  let pfDashPrevFocusEl = null;
   async function pfDashOpen() {
     if (document.getElementById('dashModalOverlay').classList.contains('open')) return;
     // 🧭 他のオーバーレイ（モバイル版ドロワー／表示設定モーダル）が開いたままだと
     // オーバーレイ同士が重なってしまうため、ダッシュボードを開く前に閉じておく
-    // （settingsClose()と対になるガード。settingsOpen()側のコメント参照）。
-    closeSidebarMobile();
-    if (document.getElementById('settingsModalOverlay').classList.contains('open')) settingsClose();
+    // （settingsOpen()と対になるガード）。
+    pfCloseOtherTopLevelOverlays('dashModalOverlay');
     pfSyncReminderUI(); // ブラウザ側の通知許可状態が変わっている可能性があるため開くたびに再同期
-    pfDashPrevFocusEl = document.activeElement;
     document.getElementById('dashModalOverlay').classList.add('open');
-    const focusable = pfDashFocusableEls();
-    (focusable[0] || document.getElementById('dashModalCard')).focus();
-    document.addEventListener('keydown', pfDashTrapKeydown, true);
+    trapPush('dashModalOverlay', document.getElementById('dashModalCard'));
     const body = document.getElementById('dashBody');
     // 🐛 以前はここで body.innerHTML = pfDashBuildHtml(...) を直接呼んでおり、タイマー/
     // 言語切替と違って開閉状態・フォーカスを保持していなかった。カレンダーを開いた状態で
@@ -3156,13 +3109,7 @@
   function pfDashClose() {
     document.getElementById('dashModalOverlay').classList.remove('open');
     pfDashStopTimer();
-    document.removeEventListener('keydown', pfDashTrapKeydown, true);
-    // document.contains()は、トリガーが既にDOMから失われていた場合に備えた安全策
-    // （通常は上のオーバーレイ相互排他ガードにより発生しないはずだが、念のため）。
-    if (pfDashPrevFocusEl && typeof pfDashPrevFocusEl.focus === 'function' && document.contains(pfDashPrevFocusEl)) {
-      pfDashPrevFocusEl.focus();
-    }
-    pfDashPrevFocusEl = null;
+    trapPop('dashModalOverlay');
   }
 
   /* ================================================================
