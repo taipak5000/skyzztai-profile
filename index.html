@@ -908,56 +908,43 @@
   .dash-calendar-chevron { margin-left: auto; font-size: 13px; color: var(--text-muted); transition: transform 0.2s ease; }
   .dash-calendar[open] .dash-calendar-summary { border-radius: 10px 10px 0 0; }
   .dash-calendar[open] .dash-calendar-chevron { transform: rotate(90deg); }
-  .dash-cal-grid {
-    display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px;
-    padding: 10px 11px; background: var(--row); border-radius: 0 0 10px 10px;
-  }
+  /* ---------- ダッシュボードのイベントカレンダー：複数日にまたがる予定を
+     Googleカレンダー風の「棒」で表示する（旧: 日ごとの丸ドット）。
+     同じカテゴリ内でも複数の予定が同時に走ることがあり（例:「来訪する精霊団」と
+     「夏のキャンプ」は共にevent扱い）、ドットの色だけでは区別がつかなかった。
+     棒表示では予定名そのものを棒の中に文字で表示するため、色は予定名ごとに
+     決定論的に割り当てるだけでよく、カテゴリという概念は表示上は不要になった
+     （データの分類としては内部の計算にのみ残る）。
+     予定は月全体で1回だけ「レーン」（縦位置）を割り当て、週をまたいでも同じ予定は
+     同じレーンに留まるようにする（週ごとに再計算すると同じ予定が週によって縦位置が
+     変わってしまうため）。その週に実際に予定が無いレーンの行はその週では描画せず、
+     余計な空白を作らない（安定した見た目とスペース効率を両立）。 ---------- */
+  .dash-cal-body { background: var(--row); border-radius: 0 0 10px 10px; padding: 10px 11px; }
+  .dash-cal-dow-row { display: grid; grid-template-columns: repeat(7, 1fr); }
   .dash-cal-dow { text-align: center; font-size: 10px; font-weight: 700; color: var(--text-muted); padding-bottom: 4px; }
-  /* max-width+justify-self: 表示設定モーダル/ダッシュボードのシート自体は
-     >=560pxで360pxにキャップされるが、375~559pxの間はシートが画面幅いっぱいに
-     広がるため、そのままだとセルが67px超まで膨張してしまう（実測済み）。
-     セル自体にキャップを掛けて風船化を防ぎ、余った分は列内で中央寄せする。 */
-  .dash-cal-day { aspect-ratio: 1; max-width: 46px; width: 100%; justify-self: center; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; gap: 2px; }
-  .dash-cal-day.is-pad { visibility: hidden; }
-  .dash-cal-daynum { font-size: 11px; font-variant-numeric: tabular-nums; color: var(--text); }
-  /* 「今日」セルの塗りは、テーマで明るさが反転する--skyではなく両テーマ共通の
-     --sky-deep-contrast（白文字用に用意された暗い水色。他の白文字塗り箇所と同じ）を使う。
-     ダークモードの--skyは淡いパステル水色になり、白文字とのコントラストがAA未達（≈2.1:1）
-     になるため。ドットも塗りだけでは背景色によって視認性が変わるため、白い縁取りを足して
-     非テキストのコントラスト(3:1)を確保する。 */
-  .dash-cal-day.is-today { background: var(--sky-deep-contrast); }
-  .dash-cal-day.is-today .dash-cal-daynum { color: #fff; font-weight: 700; }
-  .dash-cal-dots { display: flex; gap: 2px; height: 4px; }
-  .dash-cal-dot { width: 4px; height: 4px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-  /* ライトモードの通常セル背景(--row: #F1F7FD)に対して、素の#eab308/#f97316/#14b8a6は
-     WCAG 1.4.11の非テキストコントラスト3:1を満たさない（自前でrelative luminanceを
-     計算して実測：季節1.78:1、キャンドル2.6:1、再訪1.8xx台。events(#ec4899)のみ3.27:1で
-     ぎりぎり達成）。ダークモードの--row(#101D32)に対しては元の色のままで6~9:1と十分な
-     ので、ここではライト側だけ濃い/彩度の高いバリアントに差し替え、ダークモードは
-     [data-theme="dark"]側で元の色に戻す。
-     季節のライト側だけ#b45309（amber-700, 色相26°）を使っていたが、キャンドルの
-     #c2410c（orange-700, 色相17.5°）と色相差わずか8.5°・相対輝度もほぼ同一
-     （相互コントラスト1.03:1）で、4pxのドットでは実機の並び比較でも見分けが
-     つかなかった（実測・別ファイルでのスウォッチ比較で確認）。ダーク側の季節色
-     #eab308は本来色相45°の金色寄りなのに、コントラスト確保のため単純に暗くした
-     結果オレンジに寄ってしまったのが原因。#eab308の色相(45°)をなるべく保ったまま
-     3:1を満たす暗さまで落とした#6b4a04（色相41°、対--row 7.47:1、対キャンドル
-     相互コントラスト1.56:1）に差し替え、キャンドルとの色相差を約23°まで広げた。 */
-  .dash-cal-dot.season { background: #6b4a04; }
-  .dash-cal-dot.event { background: #ec4899; }
-  .dash-cal-dot.candle { background: #c2410c; }
-  .dash-cal-dot.revisit { background: #0f766e; }
-  [data-theme="dark"] .dash-cal-dot.season { background: #eab308; }
-  [data-theme="dark"] .dash-cal-dot.candle { background: #f97316; }
-  [data-theme="dark"] .dash-cal-dot.revisit { background: #14b8a6; }
-  .dash-cal-day.is-today .dash-cal-dot { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.95); }
-  /* 今日セルで複数カテゴリが重なると、隣接ドット同士のリング(1px)が触れ合ってしまい
-     白い塊に見えて何個・どの色かが判別できなくなる回帰があったため、今日セルのドットだけ
-     間隔を広げてリング同士が重ならない・接触しないようにする。 */
-  .dash-cal-day.is-today .dash-cal-dots { gap: 5px; }
-  .dash-cal-legend { display: flex; flex-wrap: wrap; gap: 10px; padding: 8px 2px 2px; font-size: 10.5px; color: var(--text-muted); }
-  .dash-cal-legend span { display: inline-flex; align-items: center; gap: 4px; }
-  .dash-cal-legend .dash-cal-dot { width: 6px; height: 6px; }
+  .dash-cal-week + .dash-cal-week { margin-top: 4px; }
+  .dash-cal-daynum-row { display: grid; grid-template-columns: repeat(7, 1fr); padding-top: 2px; }
+  .dash-cal-daynum { display: flex; align-items: center; justify-content: center; height: 20px; }
+  .dash-cal-daynum span { font-size: 11px; font-variant-numeric: tabular-nums; color: var(--text); }
+  /* 「今日」の丸バッジは、テーマで明るさが反転する--skyではなく両テーマ共通の
+     --sky-deep-contrast（白文字用に用意された暗い水色。旧.dash-cal-day.is-todayと同じ塗り）
+     を使う。ダークモードの--skyは淡いパステル水色になり、白文字とのコントラストが
+     AA未達（≈2.1:1）になるため。 */
+  .dash-cal-daynum.is-today span {
+    display: flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; border-radius: 50%; background: var(--sky-deep-contrast); color: #fff; font-weight: 700;
+  }
+  .dash-cal-bars { display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: 18px; row-gap: 2px; column-gap: 0; padding-top: 2px; }
+  .dash-cal-bar {
+    display: flex; align-items: center; min-width: 0; height: 18px; margin: 0;
+    padding: 0 6px; font-size: 10px; font-weight: 600; color: #fff;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  /* column-gap:0のグリッドに複数列またぎでbackgroundを敷くことで継ぎ目のない一本の棒に
+     見せる。丸めは本当の開始/終了端にだけ.round-l/.round-rで付与し、前後の週・月へ
+     継続中の端はグリッド境界にぴったり接するフラットな辺のままにする。 */
+  .dash-cal-bar.round-l { border-top-left-radius: 9px; border-bottom-left-radius: 9px; margin-left: 2px; }
+  .dash-cal-bar.round-r { border-top-right-radius: 9px; border-bottom-right-radius: 9px; margin-right: 2px; }
   .dash-count-num { font-size: 1.1em; }
   .dash-count-unit { font-weight: 500; opacity: 0.75; font-size: 0.85em; margin-right: 3px; }
 
@@ -1700,10 +1687,6 @@
     dashLoading: { ja: '読み込み中…', en: 'Loading…' },
     dashLoadFailed: { ja: '読み込みに失敗しました', en: 'Failed to load' },
     dashCalendarSummary: { ja: 'カレンダーで見る（{month}）', en: 'View as Calendar ({month})' },
-    dashCalLegendSeason: { ja: '季節', en: 'Season' },
-    dashCalLegendEvent: { ja: 'イベント', en: 'Event' },
-    dashCalLegendCandle: { ja: 'キャンドル2倍', en: '2x Candles' },
-    dashCalLegendRevisit: { ja: '再訪精霊', en: 'Revisit Spirit' },
     dashSectionDaily: { ja: 'デイリー', en: 'Daily' },
     dashSectionToday: { ja: '今日', en: 'Today' },
     dashSectionWeek: { ja: '今週', en: 'This Week' },
@@ -2794,40 +2777,74 @@
     if (s && s.getTime() > rangeEnd.getTime()) return [];
     return [{ start: s, end: e }];
   }
-  // 表示中の月の各日について、実際に開催中のカテゴリ（season/event/candle/revisit）だけを
-  // 'YYYY-M-D'キー→カテゴリ名Setのマップにまとめる
-  function pfDashCalendarMarks(data, year, month) {
+  // 表示中の月に登場する予定（季節・イベント・キャンドル2倍・再訪精霊）を、月全体で
+  // 重ならないよう「レーン」（縦位置）に割り当てる。同じ予定は月内を通して同じレーンに
+  // 留まるようにするため、週ごとではなく月全体で1回だけレーンを計算する（週ごとに
+  // 再計算すると、同じ予定が週によって縦位置が変わってしまい見た目が安定しない）。
+  // 棒の色は「カテゴリ」ではなく「予定名」ごとに割り当てる。同じevent扱いの予定同士が
+  // 同時に走ることがあり、カテゴリ色だけでは区別がつかないため。白文字を乗せる前提で、
+  // 全色ともWCAG 4.5:1以上のコントラストになるよう選定・検証済み。
+  const DASH_CAL_BAR_PALETTE = [
+    '#b91c1c', '#7c3aed', '#57534e', '#1d4ed8', '#92400e',
+    '#15803d', '#0f766e', '#be185d', '#9a3412', '#4338ca',
+  ];
+  function pfDashCalendarBarItems(data, year, month) {
     const rangeStart = new Date(year, month, 1, 0, 0, 0);
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const rangeEnd = new Date(year, month, daysInMonth, 23, 59, 59);
-    const marks = new Map();
-    function addRange(cat, start, end) {
-      const from = start && start > rangeStart ? start : rangeStart;
-      const to = end < rangeEnd ? end : rangeEnd;
-      if (to < from) return;
-      const d = new Date(from.getFullYear(), from.getMonth(), from.getDate());
-      const last = new Date(to.getFullYear(), to.getMonth(), to.getDate());
-      while (d <= last) {
-        const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-        if (!marks.has(key)) marks.set(key, new Set());
-        marks.get(key).add(cat);
-        d.setDate(d.getDate() + 1);
-      }
+    const items = [];
+    // 🅲🅾🅻 名前の文字列ハッシュで色を選ぶと、異なる予定名が同じ色に衝突することがある。
+    // 代わりに、この月の描画で初めて登場した順にパレットを1色ずつ割り当てることで、
+    // 同じ月内では異なる予定名が絶対に同じ色にならないことを保証する（パレット10色に対して
+    // 実際のデータの同時開催数はもっと少ないため十分）。月をまたいだ色の一貫性（同じ予定名は
+    // 常に同じ色）は失われるが、月内での判別可能性を優先する。
+    const colorMap = new Map();
+    function colorFor(name) {
+      if (!colorMap.has(name)) colorMap.set(name, DASH_CAL_BAR_PALETTE[colorMap.size % DASH_CAL_BAR_PALETTE.length]);
+      return colorMap.get(name);
     }
+
+    function pushItems(schedule, name) {
+      pfDashOccurrencesInRange(schedule, rangeStart, rangeEnd).forEach(o => {
+        const clipStart = o.start && o.start > rangeStart ? o.start : rangeStart;
+        const clipEnd = o.end < rangeEnd ? o.end : rangeEnd;
+        if (clipEnd < clipStart) return;
+        items.push({
+          name,
+          color: colorFor(name),
+          startDay: clipStart.getDate(),
+          endDay: clipEnd.getDate(),
+          // 実際の開始/終了がこの月の表示範囲内にあるかどうか（範囲外なら、その端は
+          // 隣の月へシームレスに続いているように見せるため角を丸めない）。
+          // season(開始日不明のスケジュール)はo.startが無いため「開始日が分かっている」
+          // 判定はできない——シーズンは1〜3ヶ月続くため、この1ヶ月だけを表示する
+          // カレンダー上ではほぼ必ず「前月から継続中」であり、真の開始日をこのカレンダーが
+          // 実際に描画したことは無いに等しい。o.startが無い場合は素直に「開始日不明
+          // （＝丸めない）」として扱う。
+          trueStart: !!o.start && o.start.getTime() >= rangeStart.getTime(),
+          trueEnd: o.end.getTime() <= rangeEnd.getTime(),
+        });
+      });
+    }
+
     if (data.season && data.season.name && data.season.endDate) {
-      pfDashOccurrencesInRange({ end: data.season.endDate }, rangeStart, rangeEnd)
-        .forEach(r => addRange('season', r.start, r.end));
+      pushItems({ end: data.season.endDate }, dashEventName(data.season.name));
     }
-    (data.eventSchedule || []).forEach(ev => {
-      pfDashOccurrencesInRange(ev, rangeStart, rangeEnd).forEach(r => addRange('event', r.start, r.end));
+    (data.eventSchedule || []).forEach(ev => pushItems(ev, dashEventName(ev.name)));
+    (data.candleBonusSchedule || []).forEach(ev => pushItems(ev, dashEventName(ev.name)));
+    (data.revisitSchedules || []).forEach(sch => pushItems(sch, t('dashRevisitSpirit')));
+
+    // 開始日が早い順、同じ開始日なら長い予定を優先してレーンに割り当てる
+    // （長い予定ほど上のレーンに固定されやすくなり、月をまたいでも位置が安定しやすい）
+    items.sort((a, b) => a.startDay - b.startDay || (b.endDay - b.startDay) - (a.endDay - a.startDay));
+    const laneEndDay = []; // laneEndDay[i] = そのレーンに最後に置いた予定の終了日
+    items.forEach(it => {
+      let lane = laneEndDay.findIndex(endDay => endDay < it.startDay);
+      if (lane === -1) { lane = laneEndDay.length; laneEndDay.push(it.endDay); }
+      else { laneEndDay[lane] = it.endDay; }
+      it.lane = lane;
     });
-    (data.candleBonusSchedule || []).forEach(ev => {
-      pfDashOccurrencesInRange(ev, rangeStart, rangeEnd).forEach(r => addRange('candle', r.start, r.end));
-    });
-    (data.revisitSchedules || []).forEach(sch => {
-      pfDashOccurrencesInRange(sch, rangeStart, rangeEnd).forEach(r => addRange('revisit', r.start, r.end));
-    });
-    return marks;
+    return { items, laneCount: laneEndDay.length };
   }
   // 今月分のカレンダー本体のHTML。初期状態は折りたたまれた<details>（ネイティブ挙動を
   // 使うためJSでの開閉制御は不要）。開いたときだけ中身が見えれば十分なので、
@@ -2837,38 +2854,64 @@
     const year = now.getFullYear(), month = now.getMonth();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const startWeekday = new Date(year, month, 1).getDay();
-    const marks = pfDashCalendarMarks(data, year, month);
-    const todayKey = `${year}-${month}-${now.getDate()}`;
-    const CAT_ORDER = ['season', 'event', 'candle', 'revisit'];
-    // 🅼 各日のカテゴリは4px丸ドットの色だけで示されており、スクリーンリーダー利用者や
-    // ドットの色が区別しづらい利用者には情報が一切伝わらない（凡例と違いテキストが無い）。
-    // 凡例と同じラベル文言を使って日付+カテゴリの説明文を組み立て、セルのtitle/aria-labelに
-    // 付与する（見た目は変えず、支援技術・マウスホバー向けのテキスト等価物を追加するだけ）。
-    const CAT_LABELS = {
-      season: t('dashCalLegendSeason'), event: t('dashCalLegendEvent'),
-      candle: t('dashCalLegendCandle'), revisit: t('dashCalLegendRevisit'),
-    };
-    const monthNameOnly = LANG === 'en'
-      ? new Intl.DateTimeFormat('en-US', { month: 'long' }).format(now)
-      : `${month + 1}月`;
+    const todayDate = now.getDate();
+    const { items, laneCount } = pfDashCalendarBarItems(data, year, month);
 
     const dow = LANG === 'en' ? ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'] : ['日', '月', '火', '水', '木', '金', '土'];
-    let cellsHtml = '';
-    for (let i = 0; i < startWeekday; i++) cellsHtml += '<div class="dash-cal-day is-pad"></div>';
-    for (let d = 1; d <= daysInMonth; d++) {
-      const key = `${year}-${month}-${d}`;
-      const cats = marks.get(key);
-      const isToday = key === todayKey;
-      const catList = cats ? CAT_ORDER.filter(c => cats.has(c)).map(c => CAT_LABELS[c]) : [];
-      const dayLabel = (LANG === 'en' ? `${monthNameOnly} ${d}` : `${monthNameOnly}${d}日`)
-        + (catList.length ? `: ${catList.join(', ')}` : '');
-      const dayLabelAttr = escapeHtml(dayLabel);
-      // ドットが0個の日でも.dash-cal-dots自体は常に描画する（中身が空でも高さ4pxを確保）。
-      // そうしないとflexの中央寄せが1要素(数字のみ)と2要素(数字+ドット行)とで変わってしまい、
-      // ドットがある日とない日とで数字の縦位置がズレる。
-      const dotsHtml = `<span class="dash-cal-dots">${cats ? CAT_ORDER.filter(c => cats.has(c)).map(c => `<i class="dash-cal-dot ${c}"></i>`).join('') : ''}</span>`;
-      cellsHtml += `<div class="dash-cal-day${isToday ? ' is-today' : ''}" title="${dayLabelAttr}" aria-label="${dayLabelAttr}"><span class="dash-cal-daynum">${d}</span>${dotsHtml}</div>`;
+
+    const totalCells = startWeekday + daysInMonth;
+    const totalWeeks = Math.ceil(totalCells / 7);
+    let weeksHtml = '';
+    for (let w = 0; w < totalWeeks; w++) {
+      const weekFirstDay = w * 7 - startWeekday + 1; // 1-indexed。月の外側にはみ出す分もそのまま計算する
+      const weekLastDay = weekFirstDay + 6;
+
+      let dayNumsHtml = '';
+      for (let col = 0; col < 7; col++) {
+        const day = weekFirstDay + col;
+        if (day < 1 || day > daysInMonth) {
+          dayNumsHtml += '<div class="dash-cal-daynum"></div>';
+        } else {
+          const isToday = day === todayDate;
+          dayNumsHtml += `<div class="dash-cal-daynum${isToday ? ' is-today' : ''}"><span>${day}</span></div>`;
+        }
+      }
+
+      // その週に実際に登場する予定だけを集め、グローバルなレーン番号の昇順で
+      // ローカルな行番号(0,1,2,...)に詰め直す。月全体の最大レーン数をそのまま毎週の
+      // 高さにすると、その週にたまたま予定が少ない週でも大きな空白ができてしまうため、
+      // 「同じ予定は週をまたいでも順序が入れ替わらない」というグローバルレーンの利点は
+      // 保ちつつ、週ごとの高さは実際に使うレーン数だけに詰める。
+      const weekItems = laneCount === 0 ? [] : items
+        .filter(x => x.startDay <= weekLastDay && x.endDay >= weekFirstDay)
+        .sort((a, b) => a.lane - b.lane);
+
+      let barsHtml = '';
+      weekItems.forEach((it, localRow) => {
+        const segStartDay = Math.max(it.startDay, weekFirstDay);
+        const segEndDay = Math.min(it.endDay, weekLastDay);
+        const colStart = segStartDay - weekFirstDay + 1; // 1-indexed グリッド列
+        const colSpan = segEndDay - segStartDay + 1;
+        // 「本当にこの週で始まる/終わる」は、月内クリップ後のstartDay/endDayが
+        // この週の範囲に入っているだけでなく、それが本物の開始/終了日であること
+        // （trueStart/trueEnd）も条件にする——でないと、前月から継続中の予定が
+        // たまたま月初の週に表示される際に、丸めのない継続中の左端を誤って
+        // 「ここが本当の開始」であるかのように丸めてしまう。
+        const roundLeft = it.trueStart && it.startDay >= weekFirstDay;
+        const roundRight = it.trueEnd && it.endDay <= weekLastDay;
+        const color = it.color;
+        const nameEsc = escapeHtml(it.name);
+        barsHtml += `<div class="dash-cal-bar${roundLeft ? ' round-l' : ''}${roundRight ? ' round-r' : ''}"`
+          + ` style="grid-column:${colStart} / span ${colSpan}; grid-row:${localRow + 1}; background:${color};"`
+          + ` title="${nameEsc}">${nameEsc}</div>`;
+      });
+
+      weeksHtml += `<div class="dash-cal-week">
+          <div class="dash-cal-daynum-row">${dayNumsHtml}</div>
+          <div class="dash-cal-bars" style="grid-template-rows: repeat(${Math.max(weekItems.length, 1)}, 18px);">${barsHtml}</div>
+        </div>`;
     }
+
     const monthLabel = LANG === 'en'
       ? new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(now)
       : `${year}年${month + 1}月`;
@@ -2880,15 +2923,9 @@
           <span>${t('dashCalendarSummary', { month: monthLabel })}</span>
           <span class="dash-calendar-chevron">›</span>
         </summary>
-        <div class="dash-cal-grid">
-          ${dow.map(w => `<div class="dash-cal-dow">${w}</div>`).join('')}
-          ${cellsHtml}
-        </div>
-        <div class="dash-cal-legend">
-          <span><i class="dash-cal-dot season"></i>${t('dashCalLegendSeason')}</span>
-          <span><i class="dash-cal-dot event"></i>${t('dashCalLegendEvent')}</span>
-          <span><i class="dash-cal-dot candle"></i>${t('dashCalLegendCandle')}</span>
-          <span><i class="dash-cal-dot revisit"></i>${t('dashCalLegendRevisit')}</span>
+        <div class="dash-cal-body">
+          <div class="dash-cal-dow-row">${dow.map(w => `<div class="dash-cal-dow">${w}</div>`).join('')}</div>
+          ${weeksHtml}
         </div>
       </details>`;
   }
