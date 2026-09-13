@@ -2012,9 +2012,13 @@
   let trapListenerAttached = false;
 
   // モーダル内でTab移動の対象になる要素（表示されているものだけ）を取得する
+  // 🐛 'summary': ダッシュボードのカレンダー<details>開閉トグルはネイティブ<summary>
+  // （role="button"なし）で、これが無いとTabトラップの先頭/末尾判定に含まれず、
+  // 初期フォーカス直後のShift+Tabがsummaryを素通りして末尾の閉じるボタンへ
+  // 飛んでしまっていた（トラップの折り返し境界とDOM上の実際のTab順が食い違うため）。
   function trapFocusableEls(container) {
     const all = container.querySelectorAll(
-      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])'
     );
     return Array.prototype.filter.call(all, function (el) { return el.offsetParent !== null; });
   }
