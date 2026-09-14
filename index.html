@@ -2072,9 +2072,27 @@
     (focusable[0] || card).focus();
   }
 
+  // 🩹 連鎖オーバーレイのフォーカス誤復元バグ対策（Part 1）: 各open関数側で
+  // pfCloseOtherTopLevelOverlays()より前にtriggerElを確保する既存のガードは、
+  // 「今開こうとしているモーダルの本当のトリガー」の取り違えは防ぐが、それだけでは
+  // 足りないケースが残る——例えば「?」ショートカットでBを開いたとき、triggerElは
+  // 「?」が押された時点でAの中にフォーカスされていた要素になり得るが、その要素は
+  // pfCloseOtherTopLevelOverlays()がAを閉じる過程でdisplay:none配下に入ってしまい、
+  // 後でBを閉じてそこへ.focus()してもフォーカス不可能で無言のno-opになる（Part 2で対処）。
+  // さらに、他を閉じている最中にtrapPop(A)自身が即座にA自身のトリガーへ.focus()すると、
+  // その副作用でdocument.activeElementが一時的にAのトリガーへ書き換わってしまい、
+  // （triggerElを明示的に渡さない将来の呼び出し経路があった場合に備えて）無駄な
+  // 中間フォーカス移動が起きる。これを避けるため、「他を閉じるための連鎖的なpop」で
+  // ある間だけtrapPop()自身のフォーカス復元を止めておく（Escape等ユーザーが直接1つだけ
+  // 閉じる通常のpopでは、このフラグは立たないので今までどおり即座に復元される）。
+  let pfSuppressTrapFocusRestore = 0;
   // overlayIdをスタックから取り除き、そのモーダルを開く前にフォーカスしていた要素
   // （トリガー）へフォーカスを戻す。document.contains()は、トリガーが別のオーバーレイの
-  // 再描画等で既にDOMから失われていた場合に備えた安全策。
+  // 再描画等で既にDOMから失われていた場合に備えた安全策。offsetParentのチェックは、
+  // トリガーがDOM上には残っているものの（例：別のオーバーレイの中にあった要素が、その
+  // オーバーレイ自体の close で display:none になった場合）フォーカス不可能になっている
+  // ケースに備えたもの（Part 2）——この場合は無言で失敗させず、常に見えている下部ドックの
+  // 先頭ボタンへ安全にフォールバックする。
   function trapPop(overlayId) {
     const idx = trapStack.findIndex(function (s) { return s.overlayId === overlayId; });
     if (idx === -1) return;
@@ -2083,8 +2101,13 @@
       document.removeEventListener('keydown', trapKeydown, true);
       trapListenerAttached = false;
     }
-    if (entry.prevFocusEl && typeof entry.prevFocusEl.focus === 'function' && document.contains(entry.prevFocusEl)) {
-      entry.prevFocusEl.focus();
+    if (pfSuppressTrapFocusRestore) return;
+    const el = entry.prevFocusEl;
+    if (el && typeof el.focus === 'function' && document.contains(el) && el.offsetParent !== null) {
+      el.focus();
+    } else {
+      const fallback = document.querySelector('.site-dock button, .site-dock a');
+      if (fallback) fallback.focus();
     }
   }
 
@@ -2092,10 +2115,19 @@
   // ショートカットからいつでも独立して開けるため、他のどれかが開いたままもう1つを開くと
   // オーバーレイ同士が重なってしまう。開く前に、開こうとしているもの以外を閉じておく
   // （各close関数は未オープン時は何もしない安全な関数）。
+  // 🩹 Part 1: ここで閉じる各close関数（settingsClose/pfDashClose/closeSidebarMobile）は
+  // 内部でtrapPop()を呼び自分自身のトリガーへフォーカスを戻そうとするが、これは「他を
+  // 閉じるための連鎖」の最中に過ぎないため、pfSuppressTrapFocusRestoreを立てて
+  // trapPop()自身の復元を止めておく。
   function pfCloseOtherTopLevelOverlays(exceptId) {
-    if (exceptId !== 'settingsModalOverlay' && document.getElementById('settingsModalOverlay').classList.contains('open')) settingsClose();
-    if (exceptId !== 'dashModalOverlay' && document.getElementById('dashModalOverlay').classList.contains('open')) pfDashClose();
-    if (exceptId !== 'sidebar' && document.getElementById('sidebar').classList.contains('sidebar-open')) closeSidebarMobile();
+    pfSuppressTrapFocusRestore++;
+    try {
+      if (exceptId !== 'settingsModalOverlay' && document.getElementById('settingsModalOverlay').classList.contains('open')) settingsClose();
+      if (exceptId !== 'dashModalOverlay' && document.getElementById('dashModalOverlay').classList.contains('open')) pfDashClose();
+      if (exceptId !== 'sidebar' && document.getElementById('sidebar').classList.contains('sidebar-open')) closeSidebarMobile();
+    } finally {
+      pfSuppressTrapFocusRestore--;
+    }
   }
 
   function settingsOpen() {
