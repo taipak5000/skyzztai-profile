@@ -2054,9 +2054,16 @@
   // overlayIdをキーにカードへフォーカスを移し、Tabトラップのスタックに積む。同じ
   // overlayIdが既にスタックにある（＝多重呼び出し）場合は何もしない
   // （トリガー参照の上書き防止。各open関数側のガードと同じ考え方）。
-  function trapPush(overlayId, card) {
+  // 🐛 triggerElは呼び出し側が「pfCloseOtherTopLevelOverlaysを呼ぶ前」に取得した
+  // document.activeElementを明示的に渡す。ここでdocument.activeElementを直接読むと、
+  // 直前のpfCloseOtherTopLevelOverlaysが兄弟オーバーレイをtrapPop()した副作用で
+  // フォーカスが兄弟側のトリガー（またはその中の要素）へ移動済みになっており、
+  // 今開こうとしているモーダルの本当のトリガーではなく兄弟の残留トリガーを
+  // 記録してしまっていた（A→Bの連鎖オーバーレイでBを閉じるとAのトリガーに
+  // フォーカスが戻る不具合）。
+  function trapPush(overlayId, card, triggerEl) {
     if (!card || trapStack.some(function (s) { return s.overlayId === overlayId; })) return;
-    trapStack.push({ overlayId: overlayId, card: card, prevFocusEl: document.activeElement });
+    trapStack.push({ overlayId: overlayId, card: card, prevFocusEl: triggerEl !== undefined ? triggerEl : document.activeElement });
     if (!trapListenerAttached) {
       document.addEventListener('keydown', trapKeydown, true);
       trapListenerAttached = true;
@@ -2096,10 +2103,14 @@
     // ショートカットが押された場合。ここでガードしないとtrapPush側のトリガー参照が
     // モーダル内の要素で上書きされてしまい、閉じたときにフォーカスの戻し先を見失う）
     if (document.getElementById('settingsModalOverlay').classList.contains('open')) return;
+    // 🐛 pfCloseOtherTopLevelOverlays()より前に、今回の本当のトリガーを確保しておく
+    // （閉じる方の兄弟オーバーレイがtrapPop()で自分のトリガーへフォーカスを戻すため、
+    // 後からdocument.activeElementを読むとその残留トリガーを拾ってしまう）。
+    const triggerEl = document.activeElement;
     pfCloseOtherTopLevelOverlays('settingsModalOverlay');
     syncSettingsUI();
     document.getElementById('settingsModalOverlay').classList.add('open');
-    trapPush('settingsModalOverlay', document.getElementById('settingsModalCard'));
+    trapPush('settingsModalOverlay', document.getElementById('settingsModalCard'), triggerEl);
   }
   function settingsClose() {
     document.getElementById('settingsModalOverlay').classList.remove('open');
@@ -2118,10 +2129,14 @@
     // 既に開いている場合は何もしない（ここでガードしないとtrapPush側のトリガー参照が
     // ドロワー内の要素で上書きされてしまい、閉じたときにフォーカスの戻し先を見失う）
     if (document.getElementById('sidebar').classList.contains('sidebar-open')) return;
+    // 🐛 pfCloseOtherTopLevelOverlays()より前に、今回の本当のトリガーを確保しておく
+    // （閉じる方の兄弟オーバーレイがtrapPop()で自分のトリガーへフォーカスを戻すため、
+    // 後からdocument.activeElementを読むとその残留トリガーを拾ってしまう）。
+    const triggerEl = document.activeElement;
     pfCloseOtherTopLevelOverlays('sidebar');
     document.getElementById('sidebar').classList.add('sidebar-open');
     document.getElementById('sidebarOverlay').classList.add('show');
-    trapPush('sidebar', document.getElementById('sidebar'));
+    trapPush('sidebar', document.getElementById('sidebar'), triggerEl);
   }
   function closeSidebarMobile() {
     document.getElementById('sidebar').classList.remove('sidebar-open');
@@ -3153,10 +3168,14 @@
     // 🧭 他のオーバーレイ（モバイル版ドロワー／表示設定モーダル）が開いたままだと
     // オーバーレイ同士が重なってしまうため、ダッシュボードを開く前に閉じておく
     // （settingsOpen()と対になるガード）。
+    // 🐛 pfCloseOtherTopLevelOverlays()より前に、今回の本当のトリガーを確保しておく
+    // （閉じる方の兄弟オーバーレイがtrapPop()で自分のトリガーへフォーカスを戻すため、
+    // 後からdocument.activeElementを読むとその残留トリガーを拾ってしまう）。
+    const triggerEl = document.activeElement;
     pfCloseOtherTopLevelOverlays('dashModalOverlay');
     pfSyncReminderUI(); // ブラウザ側の通知許可状態が変わっている可能性があるため開くたびに再同期
     document.getElementById('dashModalOverlay').classList.add('open');
-    trapPush('dashModalOverlay', document.getElementById('dashModalCard'));
+    trapPush('dashModalOverlay', document.getElementById('dashModalCard'), triggerEl);
     const body = document.getElementById('dashBody');
     // 🐛 以前はここで body.innerHTML = pfDashBuildHtml(...) を直接呼んでおり、タイマー/
     // 言語切替と違って開閉状態・フォーカスを保持していなかった。カレンダーを開いた状態で
