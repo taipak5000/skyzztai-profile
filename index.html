@@ -2086,13 +2086,31 @@
   // ある間だけtrapPop()自身のフォーカス復元を止めておく（Escape等ユーザーが直接1つだけ
   // 閉じる通常のpopでは、このフラグは立たないので今までどおり即座に復元される）。
   let pfSuppressTrapFocusRestore = 0;
+  // overlayIdをキーに、そのオーバーレイを直接開ける下部ドックの自分自身のボタンを引く。
+  // trapPop()のフォールバック時、「見えているドックへならどこでも逃がす」よりも
+  // 「閉じようとしていたオーバーレイ自身の開閉ボタン」に戻す方が文脈として自然なため
+  // （例：ダッシュボードを閉じたらダッシュボードのドックボタンへ）。
+  const OVERLAY_SELF_DOCK_SELECTOR = {
+    settingsModalOverlay: '.site-dock [onclick^="settingsOpen"]',
+    dashModalOverlay: '.site-dock [onclick^="pfDashOpen"]',
+    sidebar: '.site-dock [onclick^="openSidebarMobile"]'
+  };
+  // 要素がDOM上に存在し、かつ実際に今すぐフォーカスして操作できる状態かどうかを判定する。
+  // offsetParentだけでは、下部シートの退場アニメーション中（`.settings-modal-overlay.is-closing`、
+  // ~340ms、display:flexのままpointer-events:noneになる）の要素を「まだ使える」と誤判定して
+  // しまう——このウィンドウ中にフォーカスを戻すと、二度と操作できない要素にフォーカスが
+  // 取り残されたまま数百ms後にdisplay:noneになりbodyへ無言で落ちてしまう。
+  function pfIsFocusRestorable(el) {
+    if (!el || typeof el.focus !== 'function' || !document.contains(el) || el.offsetParent === null) return false;
+    return getComputedStyle(el).pointerEvents !== 'none';
+  }
   // overlayIdをスタックから取り除き、そのモーダルを開く前にフォーカスしていた要素
   // （トリガー）へフォーカスを戻す。document.contains()は、トリガーが別のオーバーレイの
-  // 再描画等で既にDOMから失われていた場合に備えた安全策。offsetParentのチェックは、
-  // トリガーがDOM上には残っているものの（例：別のオーバーレイの中にあった要素が、その
-  // オーバーレイ自体の close で display:none になった場合）フォーカス不可能になっている
-  // ケースに備えたもの（Part 2）——この場合は無言で失敗させず、常に見えている下部ドックの
-  // 先頭ボタンへ安全にフォールバックする。
+  // 再描画等で既にDOMから失われていた場合に備えた安全策。pfIsFocusRestorable()のチェックは、
+  // トリガーがDOM上には残っているものの（例：別のオーバーレイの中にあった要素、または退場
+  // アニメーション中の要素）実際にはフォーカス不可能になっているケースに備えたもの——
+  // この場合は無言で失敗させず、そのオーバーレイ自身のドックボタン（無ければドックの
+  // 先頭ボタン）へ安全に逃がす。
   function trapPop(overlayId) {
     const idx = trapStack.findIndex(function (s) { return s.overlayId === overlayId; });
     if (idx === -1) return;
@@ -2103,10 +2121,11 @@
     }
     if (pfSuppressTrapFocusRestore) return;
     const el = entry.prevFocusEl;
-    if (el && typeof el.focus === 'function' && document.contains(el) && el.offsetParent !== null) {
+    if (pfIsFocusRestorable(el)) {
       el.focus();
     } else {
-      const fallback = document.querySelector('.site-dock button, .site-dock a');
+      const selfSelector = OVERLAY_SELF_DOCK_SELECTOR[overlayId];
+      const fallback = (selfSelector && document.querySelector(selfSelector)) || document.querySelector('.site-dock button, .site-dock a');
       if (fallback) fallback.focus();
     }
   }
