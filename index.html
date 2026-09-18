@@ -1006,6 +1006,9 @@
     border-radius: var(--radius);
     padding: 20px;
     box-shadow: 0 30px 60px -20px rgba(0,0,0,0.45);
+    /* 🩹 .site-dock（画面下部固定、z-index:1001でこのシートより常に手前）に最後の項目が
+       隠れないよう下端だけ底上げ。bodyのpadding-bottomと同じ「下部クイックアクセスドック分の余白」。 */
+    padding-bottom: calc(76px + env(safe-area-inset-bottom));
   }
   .settings-modal-card h3 {
     margin: 0 0 14px;
